@@ -1,13 +1,13 @@
 
-pub mod sha1;
+pub mod crypto;
 
 #[cfg(test)]
 mod tests {
-    use sha1::{sha1};
+    use crypto::sha1::{sha1};
 
     /// Classic test
     #[test]
-    fn t1(){
+    fn sha1_test1(){
         let test = "abcd".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
@@ -19,7 +19,7 @@ mod tests {
 
     /// Classic test
     #[test]
-    fn t2(){
+    fn sha1_test2(){
         let test = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
@@ -31,7 +31,7 @@ mod tests {
 
     /// Test of multi block input
     #[test]
-    fn t3(){
+    fn sha1_test3(){
         let test = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
@@ -43,7 +43,7 @@ mod tests {
 
     /// Test of 512 bit input
     #[test]
-    fn t4(){
+    fn sha1_test4(){
         let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
@@ -55,7 +55,7 @@ mod tests {
 
     /// Test 504 bit input
     #[test]
-    fn t5(){
+    fn sha1_test5(){
         let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
@@ -67,14 +67,26 @@ mod tests {
 
     /// Test of 520 bit input
     #[test]
-    fn t6(){
+    fn sha1_test6(){
         let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
         let test : &[u8] = test.as_slice();
         assert!(sha1(test) ==
-        [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
-         0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
-         0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
-         0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+            [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
+             0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
+             0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
+             0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
     }
 
+    /// Negative test
+    #[test]
+    #[should_fail]
+    fn sha1_fail1(){
+        let test = "X".to_string().into_bytes();
+        let test : &[u8] = test.as_slice();
+        assert!(sha1(test) ==
+            [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
+             0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
+             0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
+             0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+    }
 }
