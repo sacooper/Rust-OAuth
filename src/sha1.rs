@@ -1,4 +1,5 @@
 use std::iter::{range_inclusive};
+use std::cmp::{min};
 
 const K0 : u32 = 0x5A827999u32;
 const K1 : u32 = 0x6ED9EBA1u32;
@@ -26,9 +27,9 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     let mut block : [u8, ..64];
     let mut i = 0u;
 
-    while len - ((i*64u) as u64) > 64 {
+    while len > (63 + ((i*64u) as u64)) {
         block = [0u8, ..64];
-        for j in range(0u,64u){block[j] = msg[64*i+j ];}
+        for j in range(0u, min(64u64, len) as uint){block[j] = msg[64*i+j ];}
         digest_block(&block, &mut h);
         i += 1;
     }
@@ -42,6 +43,12 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     }
 
     block[(len as uint % 64)] = 0x80u8;
+
+    if j==63 {
+        digest_block(&block, &mut h);
+        block=[0,..64];
+    }
+
     let len = len * 8;
     block[56] = ((len & 0xFF00000000000000u64) >> 56u) as u8;
     block[57] = ((len & 0x00FF000000000000u64) >> 48u) as u8;

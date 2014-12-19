@@ -4,6 +4,8 @@ pub mod sha1;
 #[cfg(test)]
 mod tests {
     use sha1::{sha1};
+
+    /// Classic test
     #[test]
     fn t1(){
         let test = "abcd".to_string().into_bytes();
@@ -15,6 +17,7 @@ mod tests {
              0x73u8, 0x82u8, 0x91u8, 0x7au8, 0xcfu8])
     }
 
+    /// Classic test
     #[test]
     fn t2(){
         let test = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
@@ -26,6 +29,7 @@ mod tests {
              0xa6u8, 0xa2u8, 0x58u8, 0x88u8, 0x42u8])
     }
 
+    /// Test of multi block input
     #[test]
     fn t3(){
         let test = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ".to_string().into_bytes();
@@ -36,4 +40,41 @@ mod tests {
              0x81u8, 0x80u8, 0xd1u8, 0xfbu8, 0x3au8,
              0x75u8, 0xcfu8, 0x96u8, 0xfeu8, 0x1du8])
     }
+
+    /// Test of 512 bit input
+    #[test]
+    fn t4(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
+        let test : &[u8] = test.as_slice();
+        assert!(sha1(test) ==
+            [0xdau8, 0xc2u8, 0x3cu8, 0x13u8, 0x66u8,
+             0xddu8, 0x53u8, 0xb6u8, 0x2du8, 0x93u8,
+             0xfcu8, 0xc4u8, 0xb6u8, 0x36u8, 0x33u8,
+             0xe6u8, 0xd5u8, 0x2fu8, 0x1cu8, 0x4cu8])
+    }
+
+    /// Test 504 bit input
+    #[test]
+    fn t5(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
+        let test : &[u8] = test.as_slice();
+        assert!(sha1(test) ==
+            [0x23u8, 0xcau8, 0x04u8, 0x35u8, 0xedu8,
+             0xc0u8, 0x88u8, 0x1au8, 0xeeu8, 0xc6u8,
+             0xa8u8, 0xcbu8, 0x72u8, 0x91u8, 0xccu8,
+             0x06u8, 0x28u8, 0x27u8, 0x1bu8, 0x75u8])
+    }
+
+    /// Test of 520 bit input
+    #[test]
+    fn t6(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
+        let test : &[u8] = test.as_slice();
+        assert!(sha1(test) ==
+        [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
+         0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
+         0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
+         0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+    }
+
 }
