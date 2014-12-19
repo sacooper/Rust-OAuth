@@ -26,22 +26,23 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     let mut block : [u8, ..64];
     let mut i = 0u;
 
-    while len - ((i*64u) as u64) > 449u64 {
+    while len - ((i*64u) as u64) > 64 {
         block = [0u8, ..64];
         for j in range(0u,64u){block[j] = msg[64*i+j ];}
         digest_block(&block, &mut h);
         i += 1;
     }
 
-    let mut j = 0u;
     block = [0u8, ..64];
-    while len > (i*64 + j) as u64 {
+    let mut j = 0u;
+
+    while len > (i*64 + j) as u64 && j < 64 {
         block[j] = msg[64*i+j];
         j+=1;
     }
 
+    block[(len as uint % 64)] = 0x80u8;
     let len = len * 8;
-    block[j] = 0x80u8;
     block[56] = ((len & 0xFF00000000000000u64) >> 56u) as u8;
     block[57] = ((len & 0x00FF000000000000u64) >> 48u) as u8;
     block[58] = ((len & 0x0000FF0000000000u64) >> 40u) as u8;
@@ -51,19 +52,7 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     block[62] = ((len & 0x000000000000FF00u64) >> 8u) as u8;
     block[63] =  (len & 0x00000000000000FFu64) as u8;
 
-    for x in block.iter(){
-        print!("{0:X} ", *x);}
-    println!("");
-
-    for x in h.iter(){
-        print!("{0:X} ", *x);}
-    println!("");
-
     digest_block(&block, &mut h);
-
-    for x in h.iter(){
-        print!("{0:X} ", *x);}
-    println!("");
 
     let mut res : [u8, ..20] = [0u8, ..20];
     for i in range(0u,5) {
@@ -83,10 +72,6 @@ fn digest_block(block : &[u8, ..64], h : &mut[u32, ..5]){
         w[i] = ((block[4u*i] as u32) << 24u) | ((block[4u*i + 1u] as u32) << 16u)
                 | ((block[4u*i+2u] as u32) << 8u) | block[4u*i+3u] as u32;
     }
-
-    for x in w.iter(){
-        print!("{0:X}", *x);
-    } println!("");
 
     t = 16;
     while t < 80 {
@@ -147,16 +132,3 @@ fn digest_block(block : &[u8, ..64], h : &mut[u32, ..5]){
     h[3] += d;
     h[4] += e;
 }
-
-// fn main(){
-//     // let test = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
-//     let test = "abcd".to_string().into_bytes();
-//     let x : &[u8] = test.as_slice();
-//
-//     let z = sha1(x);
-//
-//     for x in z.iter(){
-//         print!("{0:X} ", *x);
-//     }
-//     println!("");
-// }
