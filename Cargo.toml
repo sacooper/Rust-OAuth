@@ -3,3 +3,9 @@
 name = "Rust-OAuth"
 version = "0.0.1"
 authors = ["Scott Cooper <scott.cooper2@mail.mcgill.ca>"]
+
+# [dependencies.hyper]
+# git="https://github.com/hyperium/hyper.git"
+
+# [dependencies.url]
+# git = "https://github.com/servo/rust-url"
