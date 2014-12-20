@@ -3,6 +3,7 @@
 name = "Rust-OAuth"
 version = "0.0.1"
 authors = ["Scott Cooper <scott.cooper2@mail.mcgill.ca>"]
+readme = "README.md"
 
 # [dependencies.hyper]
 # git="https://github.com/hyperium/hyper.git"

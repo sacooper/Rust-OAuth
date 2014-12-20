@@ -1,5 +1,17 @@
+//! Full implementation of SHA1 hash algorithm in accordance with
+//! [RFC 3174](https://tools.ietf.org/html/rfc3174)
+//!
+//!# Examples
+//!
+//!```
+//! let msg = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
+//! let hash = sha1(msg.as_slice());
+//!```
+//!
+
 use std::iter::{range_inclusive};
 use std::cmp::{min};
+use super::CircularShift;
 
 const K0 : u32 = 0x5A827999u32;
 const K1 : u32 = 0x6ED9EBA1u32;
@@ -8,18 +20,8 @@ const K3 : u32 = 0xCA62C1D6u32;
 const H_INIT : [u32, ..5] =
     [0x67452301u32, 0xEFCDAB89u32, 0x98BADCFEu32, 0x10325476u32, 0xC3D2E1F0u32];
 
-
-trait CircularShift {
-
-    fn circular_shift(&mut self, bits : uint) -> Self;
-}
-
-impl CircularShift for u32 {
-    fn circular_shift(&mut self, bits : uint) -> u32 {
-        *self << bits  | *self >> (32u - bits)
-    }
-}
-
+/// Create a hash of the input data `msg`.
+#[unstable]
 pub fn sha1(msg : &[u8]) -> [u8,..20] {
     let mut h : [u32, ..5] = H_INIT;
     let len : u64 = msg.len() as u64;
