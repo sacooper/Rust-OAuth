@@ -1,10 +1,17 @@
 
 pub mod crypto;
-
+pub mod oauth;
 #[cfg(test)]
 mod tests {
     use crypto::sha1::{sha1};
+    use oauth::oauth1;
 
+    // Session initialization and setup test
+    #[test]
+    fn hw() {
+        let s = oauth1::Session::new("Hello", "World");
+    }
+/*
     /// Classic test
     #[test]
     fn sha1_test1(){
@@ -89,4 +96,5 @@ mod tests {
              0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
              0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
     }
+*/
 }
