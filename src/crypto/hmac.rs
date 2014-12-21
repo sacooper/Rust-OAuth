@@ -4,9 +4,9 @@
 //!
 //!```
 //!use rust_oauth::crypto::{sha1, hmac};
-//!let key = "key".to_string().into_bytes();
-//!let msg = "The quick brown fox jumps over the lazy dog".to_string().into_bytes();
-//!let hmac = hmac::hmac(|x|{sha1::sha1(x)},msg.as_slice(), key.as_slice());
+//!let key = "key".as_bytes();
+//!let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
+//!let hmac = hmac::hmac(|x|{sha1::sha1(x)}, msg, key);
 //!
 //!
 //!
@@ -19,22 +19,22 @@ const OPAD : [u8, ..BLOCKSIZE] = [0x5cu8, ..BLOCKSIZE];
 
 struct U8BLOCK([u8, ..BLOCKSIZE]);
 
-///
-pub fn hmac(hash : |&[u8]|->[u8, ..20], msg : &[u8], key_orig : &[u8]) -> [u8, ..20]{
-    let mut key : [u8, ..BLOCKSIZE] = [0u8, ..BLOCKSIZE];
+/// Generate the hmac using the hashing function, message, and key provided.
+pub fn hmac(hash : |&[u8]|->[u8, ..20], msg : &[u8], key : &[u8]) -> [u8, ..20]{
+    let mut key_new : [u8, ..BLOCKSIZE] = [0u8, ..BLOCKSIZE];
 
-    if key_orig.len() > BLOCKSIZE{
-        let hash = hash(key_orig);
+    if key.len() > BLOCKSIZE{
+        let hash = hash(key);
         for x in range(0, hash.len()){
-            key[x] = hash[x];
+            key_new[x] = hash[x];
         }
     } else {
-        for x in range(0, key_orig.len()){
-            key[x] = key_orig[x];
+        for x in range(0, key.len()){
+            key_new[x] = key[x];
         }
     }
     let mut v = Vec::new();
-    v.push_all(&(U8BLOCK(key) ^ IPAD));
+    v.push_all(&(U8BLOCK(key_new) ^ IPAD));
     v.push_all(msg);
     let temp : [u8, ..20] = hash(v.as_slice());
     println!("");
@@ -45,7 +45,7 @@ pub fn hmac(hash : |&[u8]|->[u8, ..20], msg : &[u8], key_orig : &[u8]) -> [u8, .
         print!("{0:X} ", *x);
     }; println!("");
     v = Vec::new();
-    v.push_all(&(U8BLOCK(key) ^ OPAD));
+    v.push_all(&(U8BLOCK(key_new) ^ OPAD));
     v.push_all(&temp);
     for x in v.iter(){
         print!("{}", *x as char);
@@ -75,9 +75,9 @@ mod tests {
 
     #[test]
     fn hamc_test1(){
-        let key = "key".to_string().into_bytes();
-        let msg = "The quick brown fox jumps over the lazy dog".to_string().into_bytes();
-        let h = hmac(|x|{sha1(x)},msg.as_slice(), key.as_slice());
+        let key = "key".as_bytes();
+        let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
+        let h = hmac(|x|{sha1(x)}, msg, key);
         println!("");
         assert!(h ==
             [0xdeu8, 0x7cu8, 0x9bu8, 0x85u8, 0xb8u8,

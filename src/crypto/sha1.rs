@@ -5,8 +5,8 @@
 //!
 //!```rust
 //! use rust_oauth::crypto::sha1::sha1;
-//! let msg = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
-//! let hash = sha1(msg.as_slice());
+//! let msg = "The quick brown fox jumped over the lazy dog".as_bytes();
+//! let hash = sha1(msg);
 //!```
 //!
 
@@ -150,8 +150,7 @@ mod tests {
     /// Classic test
     #[test]
     fn sha1_test1(){
-        let test = "abcd".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "abcd".as_bytes();
         assert!(sha1(test) ==
         [0x81u8, 0xfeu8, 0x8bu8, 0xfeu8, 0x87u8,
         0x57u8, 0x6cu8, 0x3eu8, 0xcbu8, 0x22u8,
@@ -162,8 +161,7 @@ mod tests {
     /// Classic test
     #[test]
     fn sha1_test2(){
-        let test = "The quick brown fox jumped over the lazy dog".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "The quick brown fox jumped over the lazy dog".as_bytes();
         assert!(sha1(test) ==
         [0xf6u8, 0x51u8, 0x36u8, 0x40u8, 0xf3u8,
         0x04u8, 0x5eu8, 0x97u8, 0x68u8, 0xb2u8,
@@ -174,8 +172,7 @@ mod tests {
     /// Test of multi block input
     #[test]
     fn sha1_test3(){
-        let test = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ".as_bytes();
         assert!(sha1(test) ==
         [0x49u8, 0x56u8, 0xe9u8, 0x28u8, 0x66u8,
         0xb2u8, 0x7fu8, 0xa9u8, 0x0bu8, 0x8fu8,
@@ -186,8 +183,7 @@ mod tests {
     /// Test of 512 bit input
     #[test]
     fn sha1_test4(){
-        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
         assert!(sha1(test) ==
         [0xdau8, 0xc2u8, 0x3cu8, 0x13u8, 0x66u8,
         0xddu8, 0x53u8, 0xb6u8, 0x2du8, 0x93u8,
@@ -198,8 +194,7 @@ mod tests {
     /// Test 504 bit input
     #[test]
     fn sha1_test5(){
-        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
         assert!(sha1(test) ==
         [0x23u8, 0xcau8, 0x04u8, 0x35u8, 0xedu8,
         0xc0u8, 0x88u8, 0x1au8, 0xeeu8, 0xc6u8,
@@ -210,8 +205,7 @@ mod tests {
     /// Test of 520 bit input
     #[test]
     fn sha1_test6(){
-        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
         assert!(sha1(test) ==
         [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
         0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
@@ -223,8 +217,7 @@ mod tests {
     #[test]
     #[should_fail]
     fn sha1_fail1(){
-        let test = "X".to_string().into_bytes();
-        let test : &[u8] = test.as_slice();
+        let test = "X".as_bytes();
         assert!(sha1(test) ==
         [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
         0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
