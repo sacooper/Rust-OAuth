@@ -14,7 +14,8 @@
 use std::ops::{BitXor};
 use super::sha1;
 
-// HMAC constants defined in RFC
+// HMAC constants defined in RFC 2104
+
 const BLOCKSIZE : uint = 64;
 const IPAD : [u8, ..BLOCKSIZE] = [0x36u8, ..BLOCKSIZE];
 const OPAD : [u8, ..BLOCKSIZE] = [0x5cu8, ..BLOCKSIZE];
@@ -62,15 +63,27 @@ mod tests {
     use super::hmac_sha1;
 
     #[test]
-    fn hamc_test1(){
+    fn hmac_test1(){
         let key = "key".as_bytes();
         let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
         let h = hmac_sha1(msg, key);
-        println!("");
         assert!(h ==
             [0xdeu8, 0x7cu8, 0x9bu8, 0x85u8, 0xb8u8,
              0xb7u8, 0x8au8, 0xa6u8, 0xbcu8, 0x8au8,
              0x7au8, 0x36u8, 0xf7u8, 0x0au8, 0x90u8,
              0x70u8, 0x1cu8, 0x9du8, 0xb4u8, 0xd9u8]);
     }
+
+    #[test]
+    fn hmac_test2(){
+        let key = "".as_bytes();
+        let msg = "".as_bytes();
+        let h = hmac_sha1(msg, key);
+        assert!(h ==
+            [0xfbu8, 0xdbu8, 0x1du8, 0x1bu8, 0x18u8,
+             0xaau8, 0x6cu8, 0x08u8, 0x32u8, 0x4bu8,
+             0x7du8, 0x64u8, 0xb7u8, 0x1fu8, 0xb7u8,
+             0x63u8, 0x70u8, 0x69u8, 0x0eu8, 0x1du8])
+    }
+
 }
