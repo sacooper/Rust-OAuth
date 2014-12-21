@@ -3,59 +3,23 @@
 //!# Examples
 //!
 //!```
-//!use rust_oauth::crypto::{sha1, hmac};
+//!use rust_oauth::crypto::hmac;
 //!let key = "key".as_bytes();
 //!let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
-//!let hmac = hmac::hmac(|x|{sha1::sha1(x)}, msg, key);
+//!let hmac = hmac::hmac_sha1(msg, key);
 //!
 //!
 //!
 
 use std::ops::{BitXor};
+use super::sha1;
 
+// HMAC constants defined in RFC
 const BLOCKSIZE : uint = 64;
 const IPAD : [u8, ..BLOCKSIZE] = [0x36u8, ..BLOCKSIZE];
 const OPAD : [u8, ..BLOCKSIZE] = [0x5cu8, ..BLOCKSIZE];
 
 struct U8BLOCK([u8, ..BLOCKSIZE]);
-
-/// Generate the hmac using the hashing function, message, and key provided.
-pub fn hmac(hash : |&[u8]|->[u8, ..20], msg : &[u8], key : &[u8]) -> [u8, ..20]{
-    let mut key_new : [u8, ..BLOCKSIZE] = [0u8, ..BLOCKSIZE];
-
-    if key.len() > BLOCKSIZE{
-        let hash = hash(key);
-        for x in range(0, hash.len()){
-            key_new[x] = hash[x];
-        }
-    } else {
-        for x in range(0, key.len()){
-            key_new[x] = key[x];
-        }
-    }
-    let mut v = Vec::new();
-    v.push_all(&(U8BLOCK(key_new) ^ IPAD));
-    v.push_all(msg);
-    let temp : [u8, ..20] = hash(v.as_slice());
-    println!("");
-    for x in v.iter(){
-        print!("{}", *x as char);
-    }; println!("");
-    for x in temp.iter(){
-        print!("{0:X} ", *x);
-    }; println!("");
-    v = Vec::new();
-    v.push_all(&(U8BLOCK(key_new) ^ OPAD));
-    v.push_all(&temp);
-    for x in v.iter(){
-        print!("{}", *x as char);
-        }; println!("");
-    for x in hash(v.as_slice()).iter(){
-        print!("{} ", *x);
-        }; println!("");
-    hash(v.as_slice())
-
-}
 
 impl BitXor<[u8, ..BLOCKSIZE], [u8, ..BLOCKSIZE]> for U8BLOCK{
     fn bitxor(self, _rhs : [u8, ..BLOCKSIZE]) -> [u8, ..BLOCKSIZE]{
@@ -68,16 +32,40 @@ impl BitXor<[u8, ..BLOCKSIZE], [u8, ..BLOCKSIZE]> for U8BLOCK{
     }
 }
 
+/// Generate the hmac using the hashing function, message, and key provided.
+pub fn hmac_sha1(msg : &[u8], key : &[u8]) -> [u8, ..20]{
+    let mut key_new : [u8, ..BLOCKSIZE] = [0u8, ..BLOCKSIZE];
+
+    if key.len() > BLOCKSIZE{
+        let hash = sha1::sha1(key);
+        for x in range(0, hash.len()){
+            key_new[x] = hash[x];
+        }
+    } else {
+        for x in range(0, key.len()){
+            key_new[x] = key[x];
+        }
+    }
+    let mut v = Vec::new();
+    v.push_all(&(U8BLOCK(key_new) ^ IPAD));
+    v.push_all(msg);
+    let temp : [u8, ..20] = sha1::sha1(v.as_slice());
+    v = Vec::new();
+    v.push_all(&(U8BLOCK(key_new) ^ OPAD));
+    v.push_all(&temp);
+    sha1::sha1(v.as_slice())
+
+}
+
 #[cfg(test)]
 mod tests {
-    use super::hmac;
-    use super::super::sha1::sha1;
+    use super::hmac_sha1;
 
     #[test]
     fn hamc_test1(){
         let key = "key".as_bytes();
         let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
-        let h = hmac(|x|{sha1(x)}, msg, key);
+        let h = hmac_sha1(msg, key);
         println!("");
         assert!(h ==
             [0xdeu8, 0x7cu8, 0x9bu8, 0x85u8, 0xb8u8,
