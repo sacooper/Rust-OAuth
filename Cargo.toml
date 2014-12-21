@@ -1,6 +1,6 @@
 [package]
 
-name = "Rust-OAuth"
+name = "rust_oauth"
 version = "0.0.1"
 authors = ["Scott Cooper <scott.cooper2@mail.mcgill.ca>"]
 readme = "README.md"
