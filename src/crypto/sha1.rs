@@ -18,26 +18,26 @@ const K0 : u32 = 0x5A827999u32;
 const K1 : u32 = 0x6ED9EBA1u32;
 const K2 : u32 = 0x8F1BBCDCu32;
 const K3 : u32 = 0xCA62C1D6u32;
-const H_INIT : [u32, ..5] =
+const H_INIT : [u32; 5] =
     [0x67452301u32, 0xEFCDAB89u32, 0x98BADCFEu32, 0x10325476u32, 0xC3D2E1F0u32];
 
 /// Create a hash of the input data `msg`.
 #[unstable]
-pub fn sha1(msg : &[u8]) -> [u8,..20] {
-    let mut h : [u32, ..5] = H_INIT;
+pub fn sha1(msg : &[u8]) -> [u8; 20] {
+    let mut h : [u32; 5] = H_INIT;
     let len : u64 = msg.len() as u64;
 
-    let mut block : [u8, ..64];
+    let mut block : [u8; 64];
     let mut i = 0u;
 
     while len > (63 + ((i*64u) as u64)) {
-        block = [0u8, ..64];
+        block = [0u8; 64];
         for j in range(0u, min(64u64, len) as uint){block[j] = msg[64*i+j ];}
         digest_block(&block, &mut h);
         i += 1;
     }
 
-    block = [0u8, ..64];
+    block = [0u8; 64];
     let mut j = 0u;
 
     while len > (i*64 + j) as u64 && j < 64 {
@@ -49,7 +49,7 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
 
     if j==63 {
         digest_block(&block, &mut h);
-        block=[0,..64];
+        block=[0; 64];
     }
 
     let len = len * 8;
@@ -64,7 +64,7 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
 
     digest_block(&block, &mut h);
 
-    let mut res : [u8, ..20] = [0u8, ..20];
+    let mut res : [u8; 20] = [0u8; 20];
     for i in range(0u,5) {
         res[4u*i] =   ((h[i] & 0xFF000000) >> 24u) as u8;
         res[4u*i+1] = ((h[i] & 0x00FF0000) >> 16u) as u8;
@@ -74,9 +74,9 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     res
 }
 
-fn digest_block(block : &[u8, ..64], h : &mut[u32, ..5]){
+fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     let mut t : uint;
-    let mut w : [u32, ..80u] = [0u32, ..80u];
+    let mut w : [u32; 80u] = [0u32; 80u];
 
     for i in range_inclusive(0u,15){
         w[i] = ((block[4u*i] as u32) << 24u) | ((block[4u*i + 1u] as u32) << 16u)

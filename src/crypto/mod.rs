@@ -12,7 +12,7 @@ pub mod rsa;
 #[unstable]
 pub mod hmac;
 
-#[deriving(Copy, Show, PartialEq, Eq, Clone)]
+#[derive(Copy, Show, PartialEq, Eq, Clone)]
 #[unstable]
 /// Signature Type
 pub enum SignatureType {
