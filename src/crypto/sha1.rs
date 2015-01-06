@@ -1,40 +1,43 @@
+//! Full implementation of SHA1 hash algorithm in accordance with
+//! [RFC 3174](https://tools.ietf.org/html/rfc3174)
+//!
+//!# Examples
+//!
+//!```rust
+//! use rust_oauth::crypto::sha1::sha1;
+//! let msg = "The quick brown fox jumped over the lazy dog".as_bytes();
+//! let hash = sha1(msg);
+//!```
+//!
+
 use std::iter::{range_inclusive};
 use std::cmp::{min};
+use super::CircularShift;
 
 const K0 : u32 = 0x5A827999u32;
 const K1 : u32 = 0x6ED9EBA1u32;
 const K2 : u32 = 0x8F1BBCDCu32;
 const K3 : u32 = 0xCA62C1D6u32;
-const H_INIT : [u32, ..5] =
+const H_INIT : [u32; 5] =
     [0x67452301u32, 0xEFCDAB89u32, 0x98BADCFEu32, 0x10325476u32, 0xC3D2E1F0u32];
 
-
-trait CircularShift {
-
-    fn circular_shift(&mut self, bits : uint) -> Self;
-}
-
-impl CircularShift for u32 {
-    fn circular_shift(&mut self, bits : uint) -> u32 {
-        *self << bits  | *self >> (32u - bits)
-    }
-}
-
-pub fn sha1(msg : &[u8]) -> [u8,..20] {
-    let mut h : [u32, ..5] = H_INIT;
+/// Create a hash of the input data `msg`.
+#[unstable]
+pub fn sha1(msg : &[u8]) -> [u8; 20] {
+    let mut h : [u32; 5] = H_INIT;
     let len : u64 = msg.len() as u64;
 
-    let mut block : [u8, ..64];
+    let mut block : [u8; 64];
     let mut i = 0u;
 
     while len > (63 + ((i*64u) as u64)) {
-        block = [0u8, ..64];
+        block = [0u8; 64];
         for j in range(0u, min(64u64, len) as uint){block[j] = msg[64*i+j ];}
         digest_block(&block, &mut h);
         i += 1;
     }
 
-    block = [0u8, ..64];
+    block = [0u8; 64];
     let mut j = 0u;
 
     while len > (i*64 + j) as u64 && j < 64 {
@@ -46,7 +49,7 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
 
     if j==63 {
         digest_block(&block, &mut h);
-        block=[0,..64];
+        block=[0; 64];
     }
 
     let len = len * 8;
@@ -61,7 +64,7 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
 
     digest_block(&block, &mut h);
 
-    let mut res : [u8, ..20] = [0u8, ..20];
+    let mut res : [u8; 20] = [0u8; 20];
     for i in range(0u,5) {
         res[4u*i] =   ((h[i] & 0xFF000000) >> 24u) as u8;
         res[4u*i+1] = ((h[i] & 0x00FF0000) >> 16u) as u8;
@@ -71,9 +74,9 @@ pub fn sha1(msg : &[u8]) -> [u8,..20] {
     res
 }
 
-fn digest_block(block : &[u8, ..64], h : &mut[u32, ..5]){
+fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     let mut t : uint;
-    let mut w : [u32, ..80u] = [0u32, ..80u];
+    let mut w : [u32; 80u] = [0u32; 80u];
 
     for i in range_inclusive(0u,15){
         w[i] = ((block[4u*i] as u32) << 24u) | ((block[4u*i + 1u] as u32) << 16u)
@@ -138,4 +141,87 @@ fn digest_block(block : &[u8, ..64], h : &mut[u32, ..5]){
     h[2] += c;
     h[3] += d;
     h[4] += e;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{sha1};
+
+    /// Classic test
+    #[test]
+    fn sha1_test1(){
+        let test = "abcd".as_bytes();
+        assert!(sha1(test) ==
+        [0x81u8, 0xfeu8, 0x8bu8, 0xfeu8, 0x87u8,
+        0x57u8, 0x6cu8, 0x3eu8, 0xcbu8, 0x22u8,
+        0x42u8, 0x6fu8, 0x8eu8, 0x57u8, 0x84u8,
+        0x73u8, 0x82u8, 0x91u8, 0x7au8, 0xcfu8])
+    }
+
+    /// Classic test
+    #[test]
+    fn sha1_test2(){
+        let test = "The quick brown fox jumped over the lazy dog".as_bytes();
+        assert!(sha1(test) ==
+        [0xf6u8, 0x51u8, 0x36u8, 0x40u8, 0xf3u8,
+        0x04u8, 0x5eu8, 0x97u8, 0x68u8, 0xb2u8,
+        0x39u8, 0x78u8, 0x56u8, 0x25u8, 0xcau8,
+        0xa6u8, 0xa2u8, 0x58u8, 0x88u8, 0x42u8])
+    }
+
+    /// Test of multi block input
+    #[test]
+    fn sha1_test3(){
+        let test = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ".as_bytes();
+        assert!(sha1(test) ==
+        [0x49u8, 0x56u8, 0xe9u8, 0x28u8, 0x66u8,
+        0xb2u8, 0x7fu8, 0xa9u8, 0x0bu8, 0x8fu8,
+        0x81u8, 0x80u8, 0xd1u8, 0xfbu8, 0x3au8,
+        0x75u8, 0xcfu8, 0x96u8, 0xfeu8, 0x1du8])
+    }
+
+    /// Test of 512 bit input
+    #[test]
+    fn sha1_test4(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
+        assert!(sha1(test) ==
+        [0xdau8, 0xc2u8, 0x3cu8, 0x13u8, 0x66u8,
+        0xddu8, 0x53u8, 0xb6u8, 0x2du8, 0x93u8,
+        0xfcu8, 0xc4u8, 0xb6u8, 0x36u8, 0x33u8,
+        0xe6u8, 0xd5u8, 0x2fu8, 0x1cu8, 0x4cu8])
+    }
+
+    /// Test 504 bit input
+    #[test]
+    fn sha1_test5(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
+        assert!(sha1(test) ==
+        [0x23u8, 0xcau8, 0x04u8, 0x35u8, 0xedu8,
+        0xc0u8, 0x88u8, 0x1au8, 0xeeu8, 0xc6u8,
+        0xa8u8, 0xcbu8, 0x72u8, 0x91u8, 0xccu8,
+        0x06u8, 0x28u8, 0x27u8, 0x1bu8, 0x75u8])
+    }
+
+    /// Test of 520 bit input
+    #[test]
+    fn sha1_test6(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
+        assert!(sha1(test) ==
+        [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
+        0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
+        0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
+        0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+    }
+
+    /// Negative test
+    #[test]
+    #[should_fail]
+    fn sha1_fail1(){
+        let test = "X".as_bytes();
+        assert!(sha1(test) ==
+        [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
+        0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
+        0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
+        0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+    }
 }

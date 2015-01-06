@@ -1,4 +1,3 @@
-extern crate url;
 
 pub struct Session<'a> {
     consumer_key : &'a str,
@@ -20,5 +19,17 @@ impl<'a> Session<'a> {
             consumer_key: consumer_key,
             consumer_secret: consumer_secret
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crypto::sha1::{sha1};
+    use oauth::oauth1;
+
+    // Session initialization and setup test
+    #[test]
+    fn hw() {
+        let s = oauth1::Session::new("Hello", "World");
     }
 }
