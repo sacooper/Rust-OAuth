@@ -4,8 +4,11 @@
 
 Implementation of OAuth protocol v1 .
 
-## TODO (in order - kinda): 
-- Finish HMAC
-- Implement OAuth client
-- Implement OAuth server
-- Implement v2.0
+## TODO:
+- [ ] Implement crypto required for v1
+    - [x] SHA1 hashing function
+    - [x] HMAC-SHA1
+    - [ ] RSA-SHA1 signature type
+- [ ] implement structs & traits
+- [ ] implement protocol
+- [ ] Implement v2.0 (long term)

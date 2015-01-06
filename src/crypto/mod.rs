@@ -16,20 +16,19 @@ pub mod hmac;
 #[unstable]
 /// Signature Type
 pub enum SignatureType {
-    /// SHA1 HMAC
-    SHA1,
-    /// RSA HMAC
-    RSA,
+    /// HMAC_SHA1
+    HMAC_SHA1,
+    /// RSA_SHA1
+    RSA_SHA1,
     /// Plaintext
     PLAINTEXT
 }
 
 impl Default for SignatureType {
-    fn default() -> SignatureType {SignatureType::PLAINTEXT}
+    fn default() -> SignatureType {SignatureType::HMAC_SHA1}
 }
 
 trait CircularShift {
-
     fn circular_shift(&mut self, bits : uint) -> Self;
 }
 
