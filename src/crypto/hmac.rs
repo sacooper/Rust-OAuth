@@ -7,7 +7,7 @@
 //!let key = "key".as_bytes();
 //!let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
 //!let hmac = hmac::hmac_sha1(msg, key);
-//!
+//!```
 
 use std::ops::{BitXor};
 use super::sha1;

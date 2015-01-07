@@ -1,3 +1,13 @@
+//! OAuth 1
+//!
+//!# Example
+//!
+//!```
+//!use rust_oauth::oauth::oauth1;
+//!let x = oauth1::Session::new("A","B","C");
+//!println!("{}", x.oauth_token);
+//!```
+
 use std::default::Default;
 
 pub struct Session<'a> {
