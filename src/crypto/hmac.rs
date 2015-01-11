@@ -14,7 +14,7 @@ use super::sha1;
 
 // HMAC constants defined in RFC 2104
 
-const BLOCKSIZE : uint = 64;
+const BLOCKSIZE : usize = 64;
 const IPAD : U8BLOCK = U8BLOCK([0x36u8; BLOCKSIZE]);
 const OPAD : U8BLOCK = U8BLOCK([0x5cu8; BLOCKSIZE]);
 
