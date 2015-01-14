@@ -29,11 +29,11 @@ impl Default for SignatureType {
 }
 
 trait CircularShift {
-    fn circular_shift(&mut self, bits : uint) -> Self;
+    fn circular_shift(&mut self, bits : usize) -> Self;
 }
 
 impl CircularShift for u32 {
-    fn circular_shift(&mut self, bits : uint) -> u32 {
-        *self << bits  | *self >> (32u - bits)
+    fn circular_shift(&mut self, bits : usize) -> u32 {
+        *self << bits  | *self >> (32us - bits)
     }
 }

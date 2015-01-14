@@ -7,14 +7,14 @@
 //!let key = "key".as_bytes();
 //!let msg = "The quick brown fox jumps over the lazy dog".as_bytes();
 //!let hmac = hmac::hmac_sha1(msg, key);
-//!
+//!```
 
 use std::ops::{BitXor};
 use super::sha1;
 
 // HMAC constants defined in RFC 2104
 
-const BLOCKSIZE : uint = 64;
+const BLOCKSIZE : usize = 64;
 const IPAD : U8BLOCK = U8BLOCK([0x36u8; BLOCKSIZE]);
 const OPAD : U8BLOCK = U8BLOCK([0x5cu8; BLOCKSIZE]);
 

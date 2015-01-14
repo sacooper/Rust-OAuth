@@ -1,3 +1,9 @@
+//! OAuth 1
+//!
+//!# Example
+//!
+//! TODO
+
 use std::default::Default;
 
 pub struct Session<'a> {

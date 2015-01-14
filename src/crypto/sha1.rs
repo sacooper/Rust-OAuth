@@ -28,24 +28,24 @@ pub fn sha1(msg : &[u8]) -> [u8; 20] {
     let len : u64 = msg.len() as u64;
 
     let mut block : [u8; 64];
-    let mut i = 0u;
+    let mut i = 0us;
 
-    while len > (63 + ((i*64u) as u64)) {
+    while len > (63 + ((i*64us) as u64)) {
         block = [0u8; 64];
-        for j in range(0u, min(64u64, len) as uint){block[j] = msg[64*i+j ];}
+        for j in range(0us, min(64u64, len) as usize){block[j] = msg[64*i+j ];}
         digest_block(&block, &mut h);
         i += 1;
     }
 
     block = [0u8; 64];
-    let mut j = 0u;
+    let mut j = 0us;
 
     while len > (i*64 + j) as u64 && j < 64 {
         block[j] = msg[64*i+j];
         j+=1;
     }
 
-    block[(len as uint % 64)] = 0x80u8;
+    block[(len as usize % 64)] = 0x80u8;
 
     if j==63 {
         digest_block(&block, &mut h);
@@ -53,34 +53,34 @@ pub fn sha1(msg : &[u8]) -> [u8; 20] {
     }
 
     let len = len * 8;
-    block[56] = ((len & 0xFF00000000000000u64) >> 56u) as u8;
-    block[57] = ((len & 0x00FF000000000000u64) >> 48u) as u8;
-    block[58] = ((len & 0x0000FF0000000000u64) >> 40u) as u8;
-    block[59] = ((len & 0x000000FF00000000u64) >> 32u) as u8;
-    block[60] = ((len & 0x00000000FF000000u64) >> 24u) as u8;
-    block[61] = ((len & 0x0000000000FF0000u64) >> 16u) as u8;
-    block[62] = ((len & 0x000000000000FF00u64) >> 8u) as u8;
+    block[56] = ((len & 0xFF00000000000000u64) >> 56us) as u8;
+    block[57] = ((len & 0x00FF000000000000u64) >> 48us) as u8;
+    block[58] = ((len & 0x0000FF0000000000u64) >> 40us) as u8;
+    block[59] = ((len & 0x000000FF00000000u64) >> 32us) as u8;
+    block[60] = ((len & 0x00000000FF000000u64) >> 24us) as u8;
+    block[61] = ((len & 0x0000000000FF0000u64) >> 16us) as u8;
+    block[62] = ((len & 0x000000000000FF00u64) >> 8us) as u8;
     block[63] =  (len & 0x00000000000000FFu64) as u8;
 
     digest_block(&block, &mut h);
 
     let mut res : [u8; 20] = [0u8; 20];
-    for i in range(0u,5) {
-        res[4u*i] =   ((h[i] & 0xFF000000) >> 24u) as u8;
-        res[4u*i+1] = ((h[i] & 0x00FF0000) >> 16u) as u8;
-        res[4u*i+2] = ((h[i] & 0x0000FF00) >> 8u) as u8;
-        res[4u*i+3] =  (h[i] & 0x000000FF) as u8;
+    for i in range(0us,5) {
+        res[4us*i] =   ((h[i] & 0xFF000000) >> 24us) as u8;
+        res[4us*i+1] = ((h[i] & 0x00FF0000) >> 16us) as u8;
+        res[4us*i+2] = ((h[i] & 0x0000FF00) >> 8us) as u8;
+        res[4us*i+3] =  (h[i] & 0x000000FF) as u8;
     }
     res
 }
 
 fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
-    let mut t : uint;
-    let mut w : [u32; 80u] = [0u32; 80u];
+    let mut t : usize;
+    let mut w : [u32; 80us] = [0u32; 80us];
 
-    for i in range_inclusive(0u,15){
-        w[i] = ((block[4u*i] as u32) << 24u) | ((block[4u*i + 1u] as u32) << 16u)
-                | ((block[4u*i+2u] as u32) << 8u) | block[4u*i+3u] as u32;
+    for i in range_inclusive(0us,15){
+        w[i] = ((block[4us*i] as u32) << 24us) | ((block[4us*i + 1us] as u32) << 16us)
+                | ((block[4us*i+2us] as u32) << 8us) | block[4us*i+3us] as u32;
     }
 
     t = 16;
