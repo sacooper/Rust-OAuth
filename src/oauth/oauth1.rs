@@ -1,9 +1,12 @@
 //! OAuth 1
 //!
 //!# Example
+//!
 //! TODO
 
 use std::default::Default;
+use time;
+use std::fmt;
 
 #[derive(Copy, Show, PartialEq, Eq, Clone)]
 #[unstable]
@@ -20,6 +23,7 @@ pub enum SignatureMethod {
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {SignatureMethod::HMAC_SHA1}
 }
+
 #[unstable]
 pub struct Session<'a> {
     oauth_token : &'a str,
@@ -88,5 +92,104 @@ mod tests {
         let s = Session::new("Token", "Secret", "Callback", "ConsumerKey");
         assert!(s.oauth_token == "Token" && s.oauth_verifier == "Secret" &&
                 s.request_token_url == "Callback")
+    }
+}
+
+
+
+
+
+
+
+
+pub struct Builder {
+    request_url         : String,
+    consumer_key        : String,
+    callback_url        : String,
+    signature_method    : SignatureMethod,
+    require_nonce       : bool,
+    require_timestamp   : bool,
+    version             : Option<String>,
+    realm               : Option<String>
+}
+
+pub struct TemporaryCredentials {
+    request_url         : String,
+    consumer_key        : String,
+    callback_url        : String,
+    signature_method    : SignatureMethod,
+    version             : Option<String>,
+    realm               : Option<String>,
+    nonce               : Option<String>,
+    timestamp           : Option<String>,
+}
+
+fn generateNonce() -> String {
+    "".to_string()
+}
+
+impl Builder {
+    fn new(request_url : String, consumer_key : String, callback_url : String, signature_method : SignatureMethod) -> Builder {
+        let require = match signature_method {SignatureMethod::PLAINTEXT => false, _ => true};
+        Builder {
+            request_url         : request_url,
+            consumer_key        : consumer_key,
+            callback_url        : callback_url,
+            signature_method    : signature_method,
+            require_nonce       : require,
+            require_timestamp   : require,
+            version             : None,
+            realm               : None
+        }
+    }
+
+    fn setVersion(mut self)-> Builder {
+        self.version = Some("1.0".to_string());
+        self
+    }
+
+    fn setRealm(mut self, realm : String) -> Builder {
+        self.realm = Some(realm);
+        self
+    }
+
+    fn require_nonce(mut self) -> Builder {
+        self.require_nonce = true;
+        self
+    }
+
+    fn require_timestamp(mut self) -> Builder {
+        self.require_timestamp = true;
+        self
+    }
+
+    fn create(self) -> TemporaryCredentials {
+        TemporaryCredentials {
+            request_url         : self.request_url,
+            consumer_key        : self.consumer_key,
+            callback_url        : self.callback_url,
+            signature_method    : self.signature_method,
+            version             : self.version,
+            realm               : self.realm,
+            nonce               : if self.require_nonce {Some(generateNonce())}
+            else {None},
+            timestamp           : if self.require_timestamp {Some(time::now().to_timespec().sec.to_string())}
+            else {None}
+
+        }
+    }
+}
+
+impl TemporaryCredentials {
+    pub fn sendPostRequest(self)->Result<(),()>{
+        Ok(())
+    }
+}
+
+impl fmt::Show for TemporaryCredentials {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut builder : String;
+
+        write!(f, "output")
     }
 }
