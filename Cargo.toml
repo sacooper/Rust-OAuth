@@ -4,3 +4,9 @@ name = "rust_oauth"
 version = "0.0.1"
 authors = ["Scott Cooper <scott.cooper2@mail.mcgill.ca>"]
 readme = "README.md"
+
+[dependencies]
+time = "*"
+
+[dependencies.curl]
+git = "https://github.com/carllerche/curl-rust"

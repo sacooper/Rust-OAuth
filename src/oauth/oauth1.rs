@@ -3,52 +3,54 @@
 //!# Example
 //!
 //! TODO
+extern crate time;
 
 use std::default::Default;
+use std::fmt::{Show, Result, Formatter};
+use self::time::now_utc;
+use std::rand::{thread_rng, Rng};
 
 pub struct Session<'a> {
+    oauth_consumer_key : &'a str,
     oauth_token : &'a str,
-    oauth_verifier : &'a str,
-    request_token_url : &'a str,
-    realm : Option<&'a str>,
-    oauth_consumer_key : Option<&'a str>,
-    oauth_signature : Option<&'a str>,
-    oauth_signature_method : Option<&'a str>,
-    oauth_callback_confirmed : Option<&'a str>,
-    oauth_token_secret : Option<&'a str>,
-    temporary_credentials_url : Option<&'a str>,
-    callback_token_url : Option<&'a str>,
+    oauth_token_secret : &'a str,
+    oauth_signature_method : &'a str,
+    oauth_signature : &'a str,
 }
 
-impl<'a> Default for Session<'a> {
-    fn default() -> Session<'a> {
-        Session {
-            oauth_token: "",
-            oauth_verifier: "",
-            request_token_url: "",
-            realm: None,
-            oauth_consumer_key: None,
-            oauth_signature: None,
-            oauth_signature_method: None,
-            oauth_callback_confirmed: None,
-            oauth_token_secret: None,
-            temporary_credentials_url: None,
-            callback_token_url: None,
-
-        }
-    }
+// TODO: add to crypto library?
+fn get_nonce() -> String {
+    thread_rng().gen_ascii_chars()
+                .take(10)
+                .collect()
 }
+
 impl<'a> Session<'a> {
-    pub fn new (token: &'a str, secret: &'a str, request_token_url: &'a str) -> Session<'a> {
+    pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
+                signature_method: &'a str) -> Session<'a> {
         Session {
+            oauth_consumer_key: consumer_key,
             oauth_token: token,
-            oauth_verifier: secret,
-            request_token_url: request_token_url,
-            ..Default::default()
+            oauth_token_secret : secret,
+            oauth_signature_method: signature_method,
+            oauth_signature: "TODO",
         }
     }
     pub fn get_temporary_credentials(&self) {
 
+    }
+    fn get_header(&self) -> String {
+        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
+                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                oauth_token=\"{}\", oauth_version=\"1.0\"",
+                self.oauth_consumer_key, self.oauth_signature,
+                self.oauth_signature_method, self.oauth_token);
+
+        match self.oauth_signature_method {
+            "PLAINTEXT" => header,
+            _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
+                        header, now_utc().to_timespec().sec, get_nonce())
+        }
     }
 }
 
@@ -59,6 +61,10 @@ mod tests {
     // Session initialization and setup test
     #[test]
     fn hw() {
-        let s = Session::new("Token", "Secret", "https://api.twitter.com/oauth/request_token");
+        let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
+                            "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+                            "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+                            "HMAC-SHA1");
+        println!("{}", s.get_header());
     }
 }
