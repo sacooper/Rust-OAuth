@@ -3,56 +3,68 @@
 //!# Example
 //!
 //! TODO
+extern crate time;
 
 use std::default::Default;
+use std::fmt::{Show, Result, Formatter};
+use self::time::now_utc;
+use std::rand::{thread_rng, Rng};
 
 pub struct Session<'a> {
-    realm : Option<&'a str>,
+    oauth_consumer_key : &'a str,
     oauth_token : &'a str,
-    oauth_verifier : &'a str,
-    oauth_callback : &'a str,
-    oauth_callback_confirmed : Option<&'a str>,
-    authorize_url : Option<&'a str>,
-    base_url : Option<&'a str>,
-    session_obj : Option<&'a str>,
-    signature_obj : Option<&'a str>,
+    oauth_token_secret : &'a str,
+    oauth_signature_method : &'a str,
+    oauth_signature : &'a str,
 }
 
-impl<'a> Default for Session<'a> {
-    fn default() -> Session<'a> {
-        Session {
-            realm: None,
-            oauth_token : "",
-            oauth_verifier : "",
-            oauth_callback : "",
-            oauth_callback_confirmed : None,
-            authorize_url : None,
-            base_url : None,
-            session_obj : None,
-            signature_obj : None,
-        }
-    }
+// TODO: add to crypto library?
+fn get_nonce() -> String {
+    thread_rng().gen_ascii_chars()
+                .take(10)
+                .collect()
 }
 
 impl<'a> Session<'a> {
-    pub fn new (token: &'a str, secret: &'a str, callback: &'a str) -> Session<'a> {
+    pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
+                signature_method: &'a str) -> Session<'a> {
         Session {
+            oauth_consumer_key: consumer_key,
             oauth_token: token,
-            oauth_verifier: secret,
-            oauth_callback: callback,
-            ..Default::default()
+            oauth_token_secret : secret,
+            oauth_signature_method: signature_method,
+            oauth_signature: "TODO",
+        }
+    }
+    pub fn get_temporary_credentials(&self) {
+
+    }
+    fn get_header(&self) -> String {
+        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
+                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                oauth_token=\"{}\", oauth_version=\"1.0\"",
+                self.oauth_consumer_key, self.oauth_signature,
+                self.oauth_signature_method, self.oauth_token);
+
+        match self.oauth_signature_method {
+            "PLAINTEXT" => header,
+            _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
+                        header, now_utc().to_timespec().sec, get_nonce())
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crypto::sha1::{sha1};
-    use oauth::oauth1;
+    use oauth::oauth1::Session;
 
     // Session initialization and setup test
     #[test]
     fn hw() {
-        let s = oauth1::Session::new("Token", "Secret", "Callback");
+        let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
+                            "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+                            "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+                            "HMAC-SHA1");
+        println!("{}", s.get_header());
     }
 }

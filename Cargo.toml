@@ -5,11 +5,8 @@ version = "0.0.1"
 authors = ["Scott Cooper <scott.cooper2@mail.mcgill.ca>"]
 readme = "README.md"
 
-# [dependencies.url]
-# git = "https://github.com/servo/rust-url.git"
+[dependencies]
+time = "*"
 
-# [dependencies.hyper]
-# git="https://github.com/hyperium/hyper.git"
-
-# [dependencies.url]
-# git = "https://github.com/servo/rust-url"
+[dependencies.curl]
+git = "https://github.com/carllerche/curl-rust"
