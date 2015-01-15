@@ -25,6 +25,8 @@ fn get_nonce() -> String {
                 .collect()
 }
 
+// Creates a Session Object, which contains all reused
+// parameters for OAuth 1.0A
 impl<'a> Session<'a> {
     pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
                 signature_method: &'a str) -> Session<'a> {
@@ -36,13 +38,15 @@ impl<'a> Session<'a> {
             oauth_signature: "TODO",
         }
     }
+
     pub fn get_temporary_credentials(&self) {
 
     }
+
     fn get_header(&self) -> String {
-        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
-                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                oauth_token=\"{}\", oauth_version=\"1.0\"",
+        let header = format!("Authorization: OAuth oauth_consumer_key={}\
+                &oauth_signature={}&oauth_signature_method=\"{}\"\
+                &oauth_token={}&oauth_version=1.0",
                 self.oauth_consumer_key, self.oauth_signature,
                 self.oauth_signature_method, self.oauth_token);
 
