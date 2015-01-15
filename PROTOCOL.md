@@ -1,0 +1,32 @@
+1. Client obtains temporary credentials
+    - obtained via POST to server
+        - REQUIRED:
+            - oauth_consumer_key
+            - oauth_callback
+            - oauth_signature_method:
+                - HMAC-SHA1
+                - RSA-SHA1
+                - PLAINTEXT
+        - MAY BE OMITTED if oauth_signature_method == PLAINTEXT
+            - oauth_nonce
+            - oauth_timestamp
+        - MAY BE OMITTED
+            - oauth_version
+    - Response contains:
+        - oauth_token
+        - oauth_token_secret
+        - oauth_callback_confirmed
+            - MUST be true
+2. Resource owner authorizes server to grant client's access request
+    - Client redirects user to Resource Owner Authorization endpoint with oauth_token parameter
+    - Server requests user to sign in
+    - User redirected to callback oauth_callback_url
+        - contains oauth_token and oauth_verifier
+3. Client uses temporary credentials to obtain token credentials
+    - obtained via POST to server
+        - same as (1), PLUS
+        - oauth_token
+        - oauth_verifier
+    - Response contains:
+        - oauth_token
+        - oauth_token_secret
