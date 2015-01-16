@@ -14,11 +14,11 @@ use std::rand::{thread_rng, Rng};
 #[unstable]
 /// Signature Type
 pub enum SignatureMethod {
-    /// HMAC_SHA1
+    /// HMAC-SHA1
     HMAC_SHA1,
-    /// RSA_SHA1
+    /// RSA-SHA1
     RSA_SHA1,
-    /// Plaintext
+    /// PLAINTEXT
     PLAINTEXT
 }
 
@@ -38,6 +38,7 @@ impl fmt::String for SignatureMethod {
     }
 }
 
+/// A generic trait for retrieving the authorization header from a value
 pub trait AuthorizationHeader {
     fn get_header(&self) -> String;
 }
@@ -117,33 +118,19 @@ mod tests {
 
 
 
-
 #[derive(Clone)]
-pub struct Builder {
-    request_url         : String,
-    consumer_key        : String,
-    callback_url        : String,
+pub struct Builder<'a> {
+    request_url         : &'a str,
+    consumer_key        : &'a str,
+    callback_url        : &'a str,
     signature_method    : SignatureMethod,
     require_nonce       : bool,
     require_timestamp   : bool,
-    version             : Option<String>,
-    realm               : Option<String>
+    realm               : Option<&'a str>
 }
 
-#[derive(Clone)]
-pub struct TemporaryCredentials {
-    request_url         : String,
-    consumer_key        : String,
-    callback_url        : String,
-    signature_method    : SignatureMethod,
-    version             : Option<String>,
-    realm               : Option<String>,
-    nonce               : Option<String>,
-    timestamp           : Option<String>,
-}
-
-impl Builder {
-    pub fn new(request_url : String, consumer_key : String, callback_url : String, signature_method : SignatureMethod) -> Builder {
+impl<'a> Builder<'a> {
+    pub fn new(request_url : &'a str, consumer_key : &'a str, callback_url : &'a str, signature_method : SignatureMethod) -> Builder<'a> {
         let require = match signature_method {SignatureMethod::PLAINTEXT => false, _ => true};
         Builder {
             request_url         : request_url,
@@ -157,59 +144,60 @@ impl Builder {
         }
     }
 
-    pub fn set_version(mut self)-> Builder {
-        self.version = Some("1.0".to_string());
-        self
-    }
-
-    pub fn set_realm(mut self, realm : String) -> Builder {
+    pub fn set_realm(mut self, realm : &'a str) -> Builder<'a> {
         self.realm = Some(realm);
         self
     }
 
-    pub fn require_nonce(mut self) -> Builder {
+    pub fn require_nonce(mut self) -> Builder<'a> {
         self.require_nonce = true;
         self
     }
 
-    pub fn require_timestamp(mut self) -> Builder {
+    pub fn require_timestamp(mut self) -> Builder<'a> {
         self.require_timestamp = true;
         self
     }
 
-    pub fn create(self) -> TemporaryCredentials {
-        TemporaryCredentials {
+    pub fn create(self) -> TemporaryCredentialsRequest<'a> {
+        TemporaryCredentialsRequest {
             request_url         : self.request_url,
             consumer_key        : self.consumer_key,
             callback_url        : self.callback_url,
             signature_method    : self.signature_method,
-            version             : self.version,
             realm               : self.realm,
-            nonce               : if self.require_nonce {Some(generate_nonce())}
-                                  else {None},
-            timestamp           : if self.require_timestamp {Some(now_utc().to_timespec().sec.to_string())}
-                                  else {None}
+            require_nonce       : self.require_nonce,
+            require_timestamp   : self.require_timestamp
 
         }
     }
 }
 
-impl TemporaryCredentials {
-    pub fn send_post_request(self)->Result<(),()>{
-        Ok(())
+#[derive(Clone)]
+pub struct TemporaryCredentialsRequest<'a> {
+    request_url         : &'a str,
+    consumer_key        : &'a str,
+    callback_url        : &'a str,
+    signature_method    : SignatureMethod,
+    realm               : Option<&'a str>,
+    require_nonce       : bool,
+    require_timestamp   : bool
+}
+
+impl<'a> TemporaryCredentialsRequest<'a> {
+    pub fn get_temporary_credentials(self)->Result<TemporaryCredentials,()>{
+        Ok(TemporaryCredentials{oauth_token: Default::default(), oauth_token_secret: Default::default()})
     }
 }
 
-impl AuthorizationHeader for TemporaryCredentials {
+impl<'a> AuthorizationHeader for TemporaryCredentialsRequest<'a> {
     fn get_header(&self) -> String {
-        "".to_string()
+        Default::default()
     }
 }
 
-impl fmt::Show for TemporaryCredentials {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let builder : String;
-
-        write!(f, "output")
-    }
+#[derive(Clone)]
+pub struct TemporaryCredentials {
+    oauth_token        : String,
+    oauth_token_secret : String
 }
