@@ -60,6 +60,8 @@ fn generate_nonce() -> String {
                 .collect()
 }
 
+// Creates a Session Object, which contains all reused
+// parameters for OAuth 1.0A
 impl<'a> Session<'a> {
     pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
                 signature_method: SignatureMethod) -> Session<'a> {
@@ -71,38 +73,36 @@ impl<'a> Session<'a> {
             oauth_signature: "TODO",
         }
     }
-    // pub fn set_realm(&mut self, realm : Option<&'a str>)->&Session<'a>{
-    //     self.realm = realm;
-    //     self
-    // }
-
-    pub fn get_temporary_credentials(&self) {
-        // TODO
-        unimplemented!();
-    }
 }
+
+
+// Creates a URL encoded String containing headers
+// This should be called everytime you make a request, since the
+// `oauth_timestamp` and `oauth_nonce` need to freshly made
 
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
-        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
-        oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-        oauth_token=\"{}\", oauth_version=\"1.0\"",
+        let header = format!("oauth_consumer_key={}&oauth_signature={}\
+                            &oauth_signature_method={}&oauth_token={}\
+                            &oauth_version=1.0",
         self.oauth_consumer_key, self.oauth_signature,
         self.oauth_signature_method, self.oauth_token);
 
         match self.oauth_signature_method {
             SignatureMethod::PLAINTEXT => header,
             _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-            header, now_utc().to_timespec().sec, generate_nonce())
+                        header, now_utc().to_timespec().sec, generate_nonce())
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    extern crate curl;
+    use self::curl::http;
     use super::{Session, SignatureMethod, AuthorizationHeader};
 
-        // Session initialization and setup test
+    // Session initialization and setup test
     #[test]
     fn hw() {
         let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
