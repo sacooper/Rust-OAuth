@@ -7,3 +7,6 @@ readme = "README.md"
 
 [dependencies]
 time = "*"
+
+[dependencies.curl]
+git = "https://github.com/carllerche/curl-rust"
