@@ -43,6 +43,9 @@ impl<'a> Session<'a> {
 
     }
 
+    // Creates a URL encoded String containing headers
+    // This should be called everytime you make a request, since the
+    // `oauth_timestamp` and `oauth_nonce` need to freshly made
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth oauth_consumer_key={}\
                 &oauth_signature={}&oauth_signature_method=\"{}\"\
@@ -60,6 +63,8 @@ impl<'a> Session<'a> {
 
 #[cfg(test)]
 mod tests {
+    extern crate curl;
+    use self::curl::http;
     use oauth::oauth1::Session;
 
     // Session initialization and setup test
