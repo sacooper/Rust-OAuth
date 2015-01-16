@@ -1,8 +1,6 @@
 //! Crypto functions for OAuth 1.0
 //!
-
-use std::default::Default;
-
+ 
 #[unstable]
 pub mod sha1;
 

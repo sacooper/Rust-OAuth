@@ -21,8 +21,21 @@ pub enum SignatureMethod {
 }
 
 impl Default for SignatureMethod {
-    fn default() -> SignatureMethod {SignatureMethod::HMAC_SHA1}
+    fn default() -> SignatureMethod {
+        SignatureMethod::HMAC_SHA1}
 }
+
+impl fmt::String for SignatureMethod {
+    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
+        let out = match *self {
+            SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
+            SignatureMethod::RSA_SHA1  => {"RSA-SHA1"},
+            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
+        };
+        write!(f, "{}", out)
+    }
+}
+
 
 #[unstable]
 pub struct Session<'a> {
@@ -101,7 +114,7 @@ mod tests {
 
 
 
-
+#[derive(Clone)]
 pub struct Builder {
     request_url         : String,
     consumer_key        : String,
@@ -113,6 +126,7 @@ pub struct Builder {
     realm               : Option<String>
 }
 
+#[derive(Clone)]
 pub struct TemporaryCredentials {
     request_url         : String,
     consumer_key        : String,
@@ -124,12 +138,12 @@ pub struct TemporaryCredentials {
     timestamp           : Option<String>,
 }
 
-fn generateNonce() -> String {
+fn generate_nonce() -> String {
     "".to_string()
 }
 
 impl Builder {
-    fn new(request_url : String, consumer_key : String, callback_url : String, signature_method : SignatureMethod) -> Builder {
+    pub fn new(request_url : String, consumer_key : String, callback_url : String, signature_method : SignatureMethod) -> Builder {
         let require = match signature_method {SignatureMethod::PLAINTEXT => false, _ => true};
         Builder {
             request_url         : request_url,
@@ -143,27 +157,27 @@ impl Builder {
         }
     }
 
-    fn setVersion(mut self)-> Builder {
+    pub fn set_version(mut self)-> Builder {
         self.version = Some("1.0".to_string());
         self
     }
 
-    fn setRealm(mut self, realm : String) -> Builder {
+    pub fn set_realm(mut self, realm : String) -> Builder {
         self.realm = Some(realm);
         self
     }
 
-    fn require_nonce(mut self) -> Builder {
+    pub fn require_nonce(mut self) -> Builder {
         self.require_nonce = true;
         self
     }
 
-    fn require_timestamp(mut self) -> Builder {
+    pub fn require_timestamp(mut self) -> Builder {
         self.require_timestamp = true;
         self
     }
 
-    fn create(self) -> TemporaryCredentials {
+    pub fn create(self) -> TemporaryCredentials {
         TemporaryCredentials {
             request_url         : self.request_url,
             consumer_key        : self.consumer_key,
@@ -171,7 +185,7 @@ impl Builder {
             signature_method    : self.signature_method,
             version             : self.version,
             realm               : self.realm,
-            nonce               : if self.require_nonce {Some(generateNonce())}
+            nonce               : if self.require_nonce {Some(generate_nonce())}
             else {None},
             timestamp           : if self.require_timestamp {Some(time::now().to_timespec().sec.to_string())}
             else {None}
@@ -181,14 +195,14 @@ impl Builder {
 }
 
 impl TemporaryCredentials {
-    pub fn sendPostRequest(self)->Result<(),()>{
+    pub fn send_post_request(self)->Result<(),()>{
         Ok(())
     }
 }
 
 impl fmt::Show for TemporaryCredentials {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut builder : String;
+        let builder : String;
 
         write!(f, "output")
     }
