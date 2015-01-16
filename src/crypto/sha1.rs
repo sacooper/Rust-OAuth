@@ -22,7 +22,7 @@ const H_INIT : [u32; 5] =
     [0x67452301u32, 0xEFCDAB89u32, 0x98BADCFEu32, 0x10325476u32, 0xC3D2E1F0u32];
 
 /// Create a hash of the input data `msg`.
-#[unstable]
+#[stable]
 pub fn sha1(msg : &[u8]) -> [u8; 20] {
     let mut h : [u32; 5] = H_INIT;
     let len : u64 = msg.len() as u64;
@@ -74,6 +74,7 @@ pub fn sha1(msg : &[u8]) -> [u8; 20] {
     res
 }
 
+#[stable]
 fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     let mut t : usize;
     let mut w : [u32; 80us] = [0u32; 80us];
