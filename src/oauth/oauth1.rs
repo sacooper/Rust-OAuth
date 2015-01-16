@@ -139,7 +139,6 @@ impl<'a> Builder<'a> {
             signature_method    : signature_method,
             require_nonce       : require,
             require_timestamp   : require,
-            version             : None,
             realm               : None
         }
     }
