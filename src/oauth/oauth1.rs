@@ -38,19 +38,22 @@ impl fmt::String for SignatureMethod {
     }
 }
 
+pub trait AuthorizationHeader {
+    fn get_header(&self) -> String;
+}
 
 #[unstable]
 pub struct Session<'a> {
     oauth_consumer_key : &'a str,
     oauth_token : &'a str,
     oauth_token_secret : &'a str,
-    oauth_signature_method : &'a str,
+    oauth_signature_method : SignatureMethod,
     oauth_signature : &'a str,
 }
 
 // TODO: add to crypto library?
 // TODO: Should we have a longer nonce than 10?
-fn get_nonce() -> String {
+fn generate_nonce() -> String {
     thread_rng().gen_ascii_chars()
                 .take(10)
                 .collect()
@@ -58,7 +61,7 @@ fn get_nonce() -> String {
 
 impl<'a> Session<'a> {
     pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
-                signature_method: &'a str) -> Session<'a> {
+                signature_method: SignatureMethod) -> Session<'a> {
         Session {
             oauth_consumer_key: consumer_key,
             oauth_token: token,
@@ -76,24 +79,27 @@ impl<'a> Session<'a> {
         // TODO
         unimplemented!();
     }
+}
+
+impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
-                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                oauth_token=\"{}\", oauth_version=\"1.0\"",
-                self.oauth_consumer_key, self.oauth_signature,
-                self.oauth_signature_method, self.oauth_token);
+        oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+        oauth_token=\"{}\", oauth_version=\"1.0\"",
+        self.oauth_consumer_key, self.oauth_signature,
+        self.oauth_signature_method, self.oauth_token);
 
         match self.oauth_signature_method {
-            "PLAINTEXT" => header,
+            SignatureMethod::PLAINTEXT => header,
             _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                        header, now_utc().to_timespec().sec, get_nonce())
+            header, now_utc().to_timespec().sec, generate_nonce())
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use oauth::oauth1::Session;
+    use super::{Session, SignatureMethod, AuthorizationHeader};
 
         // Session initialization and setup test
     #[test]
@@ -101,7 +107,7 @@ mod tests {
         let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
                             "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                             "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
-                            "HMAC-SHA1");
+                            SignatureMethod::HMAC_SHA1);
         println!("{}", s.get_header());
     }
 }
@@ -134,10 +140,6 @@ pub struct TemporaryCredentials {
     realm               : Option<String>,
     nonce               : Option<String>,
     timestamp           : Option<String>,
-}
-
-fn generate_nonce() -> String {
-    "".to_string()
 }
 
 impl Builder {
@@ -184,9 +186,9 @@ impl Builder {
             version             : self.version,
             realm               : self.realm,
             nonce               : if self.require_nonce {Some(generate_nonce())}
-            else {None},
-            timestamp           : if self.require_timestamp {Some(time::now().to_timespec().sec.to_string())}
-            else {None}
+                                  else {None},
+            timestamp           : if self.require_timestamp {Some(now_utc().to_timespec().sec.to_string())}
+                                  else {None}
 
         }
     }
@@ -195,6 +197,12 @@ impl Builder {
 impl TemporaryCredentials {
     pub fn send_post_request(self)->Result<(),()>{
         Ok(())
+    }
+}
+
+impl AuthorizationHeader for TemporaryCredentials {
+    fn get_header(&self) -> String {
+        "".to_string()
     }
 }
 
