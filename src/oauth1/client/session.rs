@@ -4,23 +4,11 @@
 //!
 //! TODO
 extern crate time;
-
 use std::default::Default;
 use std::fmt;
 use self::time::now_utc;
 use std::rand::{thread_rng, Rng};
-
-#[derive(Copy, Show, PartialEq, Eq, Clone)]
-#[unstable]
-/// Signature Type
-pub enum SignatureMethod {
-    /// HMAC_SHA1
-    HMAC_SHA1,
-    /// RSA_SHA1
-    RSA_SHA1,
-    /// Plaintext
-    PLAINTEXT
-}
+use super::{SignatureMethod, AuthorizationHeader};
 
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
@@ -38,10 +26,6 @@ impl fmt::String for SignatureMethod {
     }
 }
 
-pub trait AuthorizationHeader {
-    fn get_header(&self) -> String;
-}
-
 #[unstable]
 pub struct Session<'a> {
     oauth_consumer_key : &'a str,
@@ -51,18 +35,6 @@ pub struct Session<'a> {
     oauth_signature : String,
     oauth_timestamp : i64,
     oauth_nonce : String,
-}
-
-// TODO: add to crypto library?
-// TODO: Should we have a longer nonce than 10?
-fn generate_nonce() -> String {
-    thread_rng().gen_ascii_chars()
-                .take(10)
-                .collect()
-}
-
-fn generate_timestamp() -> i64{
-    now_utc().to_timespec().sec
 }
 
 // Creates a Session Object, which contains all reused
@@ -93,7 +65,7 @@ impl<'a> Session<'a> {
         } else {
             self.oauth_nonce = generate_nonce();
             self.oauth_timestamp = generate_timestamp();
-            format!("{}oauth_consumer_key=\"{}\"&oauth_nonce=\"{}\"&\
+            format!("{}&oauth_consumer_key=\"{}\"&oauth_nonce=\"{}\"&\
                     oauth_signature=\"{}\"&oauth_signature_method=\"{}\"&\
                     oauth_timestamp=\"{}\"&oauth_token=\"{}\"&oauth_version=\"1.0\"",
                     base_url, self.oauth_consumer_key, self.oauth_nonce,
@@ -129,7 +101,10 @@ impl<'a> AuthorizationHeader for Session<'a>{
 
 #[cfg(test)]
 mod tests {
-    use super::{Session, SignatureMethod, AuthorizationHeader};
+    extern crate url;
+    use super::Session;
+    use super::super::{SignatureMethod, AuthorizationHeader};
+    //use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED};
 
     // Session initialization and setup test
     #[test]
@@ -138,108 +113,7 @@ mod tests {
                         "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                         "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
                         SignatureMethod::HMAC_SHA1);
-        println!("{}", s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json"));
-    }
-}
-
-
-
-
-
-
-
-#[derive(Clone)]
-pub struct Builder {
-    request_url         : String,
-    consumer_key        : String,
-    callback_url        : String,
-    signature_method    : SignatureMethod,
-    require_nonce       : bool,
-    require_timestamp   : bool,
-    version             : Option<String>,
-    realm               : Option<String>
-}
-
-#[derive(Clone)]
-pub struct TemporaryCredentials {
-    request_url         : String,
-    consumer_key        : String,
-    callback_url        : String,
-    signature_method    : SignatureMethod,
-    version             : Option<String>,
-    realm               : Option<String>,
-    nonce               : Option<String>,
-    timestamp           : Option<String>,
-}
-
-impl Builder {
-    pub fn new(request_url : String, consumer_key : String, callback_url : String, signature_method : SignatureMethod) -> Builder {
-        let require = match signature_method {SignatureMethod::PLAINTEXT => false, _ => true};
-        Builder {
-            request_url         : request_url,
-            consumer_key        : consumer_key,
-            callback_url        : callback_url,
-            signature_method    : signature_method,
-            require_nonce       : require,
-            require_timestamp   : require,
-            version             : None,
-            realm               : None
-        }
-    }
-
-    pub fn set_version(mut self)-> Builder {
-        self.version = Some("1.0".to_string());
-        self
-    }
-
-    pub fn set_realm(mut self, realm : String) -> Builder {
-        self.realm = Some(realm);
-        self
-    }
-
-    pub fn require_nonce(mut self) -> Builder {
-        self.require_nonce = true;
-        self
-    }
-
-    pub fn require_timestamp(mut self) -> Builder {
-        self.require_timestamp = true;
-        self
-    }
-
-    pub fn create(self) -> TemporaryCredentials {
-        TemporaryCredentials {
-            request_url         : self.request_url,
-            consumer_key        : self.consumer_key,
-            callback_url        : self.callback_url,
-            signature_method    : self.signature_method,
-            version             : self.version,
-            realm               : self.realm,
-            nonce               : if self.require_nonce {Some(generate_nonce())}
-                                  else {None},
-            timestamp           : if self.require_timestamp {Some(now_utc().to_timespec().sec.to_string())}
-                                  else {None}
-
-        }
-    }
-}
-
-impl TemporaryCredentials {
-    pub fn send_post_request(self)->Result<(),()>{
-        Ok(())
-    }
-}
-
-impl AuthorizationHeader for TemporaryCredentials {
-    fn get_header(&self) -> String {
-        "".to_string()
-    }
-}
-
-impl fmt::Show for TemporaryCredentials {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let builder : String;
-
-        write!(f, "output")
+    let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json");
+    //println!("\n\n{}\n\n{}\n\n", base_string, utf8_percent_encode(base_string.as_slice(), FORM_URLENCODED));
     }
 }
