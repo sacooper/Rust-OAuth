@@ -3,12 +3,9 @@
 //!# Example
 //!
 //! TODO
-extern crate time;
 use std::default::Default;
 use std::fmt;
-use self::time::now_utc;
-use std::rand::{thread_rng, Rng};
-use super::{SignatureMethod, AuthorizationHeader};
+use super::{SignatureMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
 
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
@@ -33,7 +30,7 @@ pub struct Session<'a> {
     oauth_token_secret : &'a str,
     oauth_signature_method : SignatureMethod,
     oauth_signature : String,
-    oauth_timestamp : i64,
+    oauth_timestamp : String,
     oauth_nonce : String,
 }
 

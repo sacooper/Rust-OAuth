@@ -1,4 +1,4 @@
-use super::{SignatureMethod, AuthorizationHeader};
+use super::{SignatureMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
 use std::fmt;
 
 #[derive(Clone)]
@@ -70,7 +70,7 @@ impl Builder {
             realm               : self.realm,
             nonce               : if self.require_nonce {Some(generate_nonce())}
                                   else {None},
-            timestamp           : if self.require_timestamp {Some(now_utc().to_timespec().sec.to_string())}
+            timestamp           : if self.require_timestamp {Some(generate_timestamp())}
                                   else {None}
 
         }

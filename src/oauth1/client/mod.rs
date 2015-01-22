@@ -1,5 +1,11 @@
+extern crate time;
+
+use self::time::now_utc;
+use std::rand::{thread_rng, Rng};
+
 pub mod session;
 pub mod builder;
+
 
 #[derive(Copy, Show, PartialEq, Eq, Clone)]
 #[unstable]
@@ -26,6 +32,6 @@ fn generate_nonce() -> String {
                 .collect()
 }
 
-fn generate_timestamp() -> i64{
-    now_utc().to_timespec().sec
+fn generate_timestamp() -> String{
+    now_utc().to_timespec().sec.to_string()
 }
