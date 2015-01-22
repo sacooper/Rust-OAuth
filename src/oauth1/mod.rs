@@ -1,0 +1,2 @@
+#[unstable]
+pub mod client;

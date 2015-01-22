@@ -5,4 +5,4 @@
 pub mod crypto;
 
 #[unstable]
-pub mod oauth;
+pub mod oauth1;
