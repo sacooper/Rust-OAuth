@@ -48,7 +48,9 @@ pub struct Session<'a> {
     oauth_token : &'a str,
     oauth_token_secret : &'a str,
     oauth_signature_method : SignatureMethod,
-    oauth_signature : &'a str,
+    oauth_signature : String,
+    oauth_timestamp : i64,
+    oauth_nonce : String,
 }
 
 // TODO: add to crypto library?
@@ -57,6 +59,10 @@ fn generate_nonce() -> String {
     thread_rng().gen_ascii_chars()
                 .take(10)
                 .collect()
+}
+
+fn generate_timestamp() -> i64{
+    now_utc().to_timespec().sec
 }
 
 // Creates a Session Object, which contains all reused
@@ -69,8 +75,34 @@ impl<'a> Session<'a> {
             oauth_token: token,
             oauth_token_secret : secret,
             oauth_signature_method: signature_method,
-            oauth_signature: "TODO",
+            oauth_signature: Default::default(),
+            oauth_timestamp: Default::default(),
+            oauth_nonce: Default::default(),
         }
+    }
+    // Returns a base string URI, ecnoded with [RFC3986]
+    // This gets used to generate the `oauth_signature`
+    // This might be used to send a request as well
+    fn get_base_string(mut self, base_url: &'a str) -> String {
+        if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
+            format!("{}&oauth_consumer_key=\"{}\"&\
+                    oauth_signature=\"{}\"&oauth_signature_method=\"{}\"&\
+                    oauth_token=\"{}\"&oauth_version=\"1.0\"",
+                    base_url, self.oauth_consumer_key, self.oauth_signature,
+                    self.oauth_signature_method, self.oauth_token)
+        } else {
+            self.oauth_nonce = generate_nonce();
+            self.oauth_timestamp = generate_timestamp();
+            format!("{}oauth_consumer_key=\"{}\"&oauth_nonce=\"{}\"&\
+                    oauth_signature=\"{}\"&oauth_signature_method=\"{}\"&\
+                    oauth_timestamp=\"{}\"&oauth_token=\"{}\"&oauth_version=\"1.0\"",
+                    base_url, self.oauth_consumer_key, self.oauth_nonce,
+                    self.oauth_signature, self.oauth_signature_method,
+                    self.oauth_timestamp, self.oauth_token)
+        }
+    }
+    fn request(&self, base_url: String) {
+
     }
 }
 
@@ -81,34 +113,32 @@ impl<'a> Session<'a> {
 
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
-        let header = format!("oauth_consumer_key={}&oauth_signature={}\
-                            &oauth_signature_method={}&oauth_token={}\
-                            &oauth_version=1.0",
-        self.oauth_consumer_key, self.oauth_signature,
-        self.oauth_signature_method, self.oauth_token);
+            let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
+                            oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                            oauth_token=\"{}\", oauth_version=\"1.0\"",
+                            self.oauth_consumer_key, self.oauth_signature,
+                            self.oauth_signature_method, self.oauth_token);
 
-        match self.oauth_signature_method {
-            SignatureMethod::PLAINTEXT => header,
-            _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                        header, now_utc().to_timespec().sec, generate_nonce())
+            match self.oauth_signature_method {
+                SignatureMethod::PLAINTEXT => header,
+                _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
+                            header, generate_timestamp(), generate_nonce())
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate curl;
-    use self::curl::http;
     use super::{Session, SignatureMethod, AuthorizationHeader};
 
     // Session initialization and setup test
     #[test]
     fn hw() {
-        let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
-                            "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
-                            "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
-                            SignatureMethod::HMAC_SHA1);
-        println!("{}", s.get_header());
+    let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
+                        "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+                        "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+                        SignatureMethod::HMAC_SHA1);
+        println!("{}", s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json"));
     }
 }
 
