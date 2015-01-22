@@ -34,9 +34,11 @@ pub struct Session<'a> {
     oauth_nonce : String,
 }
 
-// Creates a Session Object, which contains all reused
-// parameters for OAuth 1.0A
+
 impl<'a> Session<'a> {
+    // Creates a Session Object, which contains all reused parameters
+    // for OAuth 1.0A. This is the Struct used to communicate with a server
+    // TODO: Should we use options for oauth_nonce and oauth_timestamp?
     pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
                 signature_method: SignatureMethod) -> Session<'a> {
         Session {
@@ -49,9 +51,9 @@ impl<'a> Session<'a> {
             oauth_nonce: Default::default(),
         }
     }
-    // Returns a base string URI, ecnoded with [RFC3986]
-    // This gets used to generate the `oauth_signature`
-    // This might be used to send a request as well
+    // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
+    // generate the `oauth_signature`. I takes a different path dependent
+    // on the signature type
     fn get_base_string(mut self, base_url: &'a str) -> String {
         if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
             format!("{}&oauth_consumer_key=\"{}\"&\
@@ -70,6 +72,10 @@ impl<'a> Session<'a> {
                     self.oauth_timestamp, self.oauth_token)
         }
     }
+    #[unimplemented]
+    // this function will take API url and data and use that to send
+    // an Oauth request. Data shouldn't need to be in alphabetical order
+    // but will be in it's own data structure.
     fn request(&self, base_url: String) {
 
     }
@@ -79,7 +85,6 @@ impl<'a> Session<'a> {
 // Creates a URL encoded String containing headers
 // This should be called everytime you make a request, since the
 // `oauth_timestamp` and `oauth_nonce` need to freshly made
-
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
             let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
