@@ -54,7 +54,9 @@ impl<'a> Session<'a> {
     // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
     // generate the `oauth_signature`. I takes a different path dependent
     // on the signature type
-    fn get_base_string(mut self, base_url: &'a str) -> String {
+    fn get_base_string(mut self, base_url: &'a str, mut data: Vec<(&str, &str)>) -> String {
+        data.sort();
+        println!("1: {} 2: {} 3: {}", data[0].1, data[1].1, data[2].1);
         if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
             format!("{}&oauth_consumer_key={}&\
                     oauth_signature={}&oauth_signature_method={}&\
@@ -96,7 +98,7 @@ impl<'a> AuthorizationHeader for Session<'a>{
             match self.oauth_signature_method {
                 SignatureMethod::PLAINTEXT => header,
                 _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                            header, generate_timestamp(), generate_nonce())
+                            header, self.oauth_timestamp, self.oauth_nonce)
         }
     }
 }
@@ -115,7 +117,8 @@ mod tests {
                             "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                             "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
                             SignatureMethod::HMAC_SHA1);
-        let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json");
-        println!("\n\n{}\n\n{}\n\n", base_string, utf8_percent_encode(base_string.as_slice(), FORM_URLENCODED_ENCODE_SET));
+        let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json",
+                                            vec![("zzz", "third"), ("qqq", "second"), ("aaa", "first")]);
+        println!("{}", utf8_percent_encode(base_string.as_slice(), FORM_URLENCODED_ENCODE_SET));
     }
 }
