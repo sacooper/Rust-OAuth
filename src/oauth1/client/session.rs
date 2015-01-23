@@ -55,8 +55,16 @@ impl<'a> Session<'a> {
     // generate the `oauth_signature`. I takes a different path dependent
     // on the signature type
     fn get_base_string(mut self, base_url: &'a str, mut data: Vec<(&str, &str)>) -> String {
+        let mut count = 0;
         data.sort();
-        println!("1: {} 2: {} 3: {}", data[0].1, data[1].1, data[2].1);
+        for x in data.iter() {
+            if x.0 > "oauth_" {
+                break;
+            }
+            count += 1;
+        }
+        // access earlier elements with `v.slice(0, count)`
+        // access later elements with `v.slice(count, v.len())`
         if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
             format!("{}&oauth_consumer_key={}&\
                     oauth_signature={}&oauth_signature_method={}&\
