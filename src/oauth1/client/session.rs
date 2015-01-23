@@ -12,7 +12,16 @@ impl Default for SignatureMethod {
         SignatureMethod::HMAC_SHA1}
 }
 
-impl fmt::String for SignatureMethod {
+struct ParamTuple<'a>((&'a str, &'a str));
+
+impl<'a> fmt::Display for ParamTuple<'a> {
+    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let &ParamTuple((key, value)) = self;
+        write!(f, "&{}={}", key, value)
+    }
+}
+
+impl fmt::Display for SignatureMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
             SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
@@ -54,19 +63,29 @@ impl<'a> Session<'a> {
     // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
     // generate the `oauth_signature`. I takes a different path dependent
     // on the signature type
-    fn get_base_string(mut self, base_url: &'a str) -> String {
+    fn get_base_string(mut self, base_url: &'a str, mut data: Vec<(&str, &str)>) -> String {
+        let mut count = 0;
+        data.sort();
+        for x in data.iter() {
+            if x.0 > "oauth_" {
+                break;
+            }
+            count += 1;
+        }
+        // access earlier elements with `v.slice(0, count)`
+        // access later elements with `v.slice(count, v.len())`
         if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
-            format!("{}&oauth_consumer_key=\"{}\"&\
-                    oauth_signature=\"{}\"&oauth_signature_method=\"{}\"&\
-                    oauth_token=\"{}\"&oauth_version=\"1.0\"",
+            format!("{}&oauth_consumer_key={}&\
+                    oauth_signature={}&oauth_signature_method={}&\
+                    oauth_token={}&oauth_version=1.0",
                     base_url, self.oauth_consumer_key, self.oauth_signature,
                     self.oauth_signature_method, self.oauth_token)
         } else {
             self.oauth_nonce = generate_nonce();
             self.oauth_timestamp = generate_timestamp();
-            format!("{}&oauth_consumer_key=\"{}\"&oauth_nonce=\"{}\"&\
-                    oauth_signature=\"{}\"&oauth_signature_method=\"{}\"&\
-                    oauth_timestamp=\"{}\"&oauth_token=\"{}\"&oauth_version=\"1.0\"",
+            format!("{}&oauth_consumer_key={}&oauth_nonce={}&\
+                    oauth_signature={}&oauth_signature_method={}&\
+                    oauth_timestamp={}&oauth_token={}&oauth_version=1.0",
                     base_url, self.oauth_consumer_key, self.oauth_nonce,
                     self.oauth_signature, self.oauth_signature_method,
                     self.oauth_timestamp, self.oauth_token)
@@ -87,7 +106,7 @@ impl<'a> Session<'a> {
 // `oauth_timestamp` and `oauth_nonce` need to freshly made
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
-            let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\" \
+            let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\", \
                             oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
                             oauth_token=\"{}\", oauth_version=\"1.0\"",
                             self.oauth_consumer_key, self.oauth_signature,
@@ -96,7 +115,7 @@ impl<'a> AuthorizationHeader for Session<'a>{
             match self.oauth_signature_method {
                 SignatureMethod::PLAINTEXT => header,
                 _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                            header, generate_timestamp(), generate_nonce())
+                            header, self.oauth_timestamp, self.oauth_nonce)
         }
     }
 }
@@ -106,16 +125,17 @@ mod tests {
     extern crate url;
     use super::Session;
     use super::super::{SignatureMethod, AuthorizationHeader};
-    //use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED};
+    use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
 
     // Session initialization and setup test
     #[test]
     fn hw() {
-    let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
-                        "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
-                        "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
-                        SignatureMethod::HMAC_SHA1);
-    let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json");
-    //println!("\n\n{}\n\n{}\n\n", base_string, utf8_percent_encode(base_string.as_slice(), FORM_URLENCODED));
+        let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
+                            "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+                            "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+                            SignatureMethod::HMAC_SHA1);
+        let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json",
+                                            vec![("zzz", "third"), ("qqq", "second"), ("aaa", "first")]);
+        println!("{}", utf8_percent_encode(base_string.as_slice(), FORM_URLENCODED_ENCODE_SET));
     }
 }
