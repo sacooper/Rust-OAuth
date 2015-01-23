@@ -89,7 +89,7 @@ impl AuthorizationHeader for TemporaryCredentials {
     }
 }
 
-impl fmt::Show for TemporaryCredentials {
+impl fmt::Debug for TemporaryCredentials {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let builder : String;
 

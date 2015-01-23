@@ -12,7 +12,16 @@ impl Default for SignatureMethod {
         SignatureMethod::HMAC_SHA1}
 }
 
-impl fmt::String for SignatureMethod {
+struct ParamTuple<'a>((&'a str, &'a str));
+
+impl<'a> fmt::Display for ParamTuple<'a> {
+    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let &ParamTuple((key, value)) = self;
+        write!(f, "&{}={}", key, value)
+    }
+}
+
+impl fmt::Display for SignatureMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
             SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
