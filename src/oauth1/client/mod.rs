@@ -3,6 +3,7 @@ extern crate time;
 use self::time::now_utc;
 use std::rand::{OsRng, Rng};
 use std::iter::Iterator;
+use std::fmt;
 
 pub mod session;
 pub mod builder;
@@ -19,6 +20,19 @@ pub enum SignatureMethod {
     PLAINTEXT
 }
 
+impl fmt::Display for SignatureMethod {
+    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
+        let out = match *self {
+            SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
+            SignatureMethod::RSA_SHA1  => {"RSA-SHA1"},
+            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
+        };
+        write!(f, "{}", out)
+    }
+}
+
+#[derive(Copy, Show, PartialEq, Eq, Clone)]
+#[unstable]
 pub enum HTTPMethod {
     GET,
     POST,
@@ -26,6 +40,20 @@ pub enum HTTPMethod {
     PUT,
     HEAD
 }
+
+impl fmt::Display for HTTPMethod {
+    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
+        let out = match *self {
+            HTTPMethod::GET     => {"GET"},
+            HTTPMethod::POST    => {"POST"},
+            HTTPMethod::DELETE  => {"DELETE"},
+            HTTPMethod::PUT     => {"PUT"},
+            HTTPMethod::HEAD   => {"HEAD"}
+        };
+        write!(f, "{}", out)
+    }
+}
+
 
 pub trait AuthorizationHeader {
     fn get_header(&self) -> String;

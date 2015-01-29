@@ -7,7 +7,7 @@ extern crate url;
 use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
 use std::default::Default;
 use std::fmt;
-use super::{SignatureMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::{SignatureMethod, HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
 
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
@@ -20,17 +20,6 @@ impl<'a> fmt::Display for ParamTuple<'a> {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
         let &ParamTuple((key, value)) = self;
         write!(f, "&{}={}", key, value)
-    }
-}
-
-impl fmt::Display for SignatureMethod {
-    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
-        let out = match *self {
-            SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
-            SignatureMethod::RSA_SHA1  => {"RSA-SHA1"},
-            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
-        };
-        write!(f, "{}", out)
     }
 }
 
@@ -73,9 +62,10 @@ impl<'a> Session<'a> {
     // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
     // generate the `oauth_signature`. It takes a different path dependent
     // on the signature type
-    fn get_base_string(self, base_url: &'a str, data: Vec<(&str, &str)>) -> String {
-        format!("{}&{}", utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
-                         utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
+    fn get_base_string(self, method: HTTPMethod, base_url: &'a str, data: Vec<(&str, &str)>) -> String {
+        format!("{}&{}&{}", method,
+                utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
+                utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
     }
     fn get_base_parameters(mut self, mut data: Vec<(&str, &str)>) -> String {
         let mut out;
@@ -145,7 +135,7 @@ impl<'a> AuthorizationHeader for Session<'a>{
 #[cfg(test)]
 mod tests {
     use super::Session;
-    use super::super::{SignatureMethod, AuthorizationHeader};
+    use super::super::{HTTPMethod, SignatureMethod, AuthorizationHeader};
 
     // Session initialization and setup test
     #[test]
@@ -154,9 +144,10 @@ mod tests {
                             "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                             "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
                             SignatureMethod::HMAC_SHA1);
-        let base_string = s.get_base_string("https://api.twitter.com/1.1/statuses/user_timeline.json",
-                                            vec![("screen_name", "twitterapi"),
-                                                 ("count", "2")]);
+        let base_string = s.get_base_string( HTTPMethod::GET,
+                            "https://api.twitter.com/1.1/statuses/user_timeline.json",
+                            vec![("screen_name", "twitterapi"),
+                                 ("count", "2")]);
         println!("{}", base_string);
     }
 }
