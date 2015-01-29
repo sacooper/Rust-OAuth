@@ -19,6 +19,13 @@ pub enum SignatureMethod {
     PLAINTEXT
 }
 
+pub enum HTTPMethod {
+    GET,
+    POST,
+    DELETE,
+    PUT,
+    HEAD
+}
 
 pub trait AuthorizationHeader {
     fn get_header(&self) -> String;
