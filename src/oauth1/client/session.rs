@@ -32,6 +32,14 @@ impl fmt::Display for SignatureMethod {
     }
 }
 
+fn to_parameters(data: Vec<(&str, &str)>) -> String {
+    let mut out = String::new();
+    for &it in data.iter() {
+        out = format!("{}&{}={}", out, it.0, it.1);
+    }
+    return out;
+}
+
 #[unstable]
 pub struct Session<'a> {
     oauth_consumer_key : &'a str,
@@ -61,34 +69,37 @@ impl<'a> Session<'a> {
         }
     }
     // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
-    // generate the `oauth_signature`. I takes a different path dependent
+    // generate the `oauth_signature`. It takes a different path dependent
     // on the signature type
     fn get_base_string(mut self, base_url: &'a str, mut data: Vec<(&str, &str)>) -> String {
         let mut count = 0;
         data.sort();
+        // TODO: Is there a cleaner way to do this?
         for x in data.iter() {
             if x.0 > "oauth_" {
                 break;
             }
             count += 1;
         }
-        // access earlier elements with `v.slice(0, count)`
-        // access later elements with `v.slice(count, v.len())`
+        let end = data.split_off(count);
+
         if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
-            format!("{}&oauth_consumer_key={}&\
+            format!("{}{}&oauth_consumer_key={}&\
                     oauth_signature={}&oauth_signature_method={}&\
-                    oauth_token={}&oauth_version=1.0",
-                    base_url, self.oauth_consumer_key, self.oauth_signature,
-                    self.oauth_signature_method, self.oauth_token)
+                    oauth_token={}&oauth_version=1.0{}",
+                    to_parameters(data), base_url, self.oauth_consumer_key,
+                    self.oauth_signature, self.oauth_signature_method,
+                    self.oauth_token, to_parameters(end))
+
         } else {
             self.oauth_nonce = generate_nonce();
             self.oauth_timestamp = generate_timestamp();
-            format!("{}&oauth_consumer_key={}&oauth_nonce={}&\
+            format!("{}{}&oauth_consumer_key={}&oauth_nonce={}&\
                     oauth_signature={}&oauth_signature_method={}&\
-                    oauth_timestamp={}&oauth_token={}&oauth_version=1.0",
-                    base_url, self.oauth_consumer_key, self.oauth_nonce,
-                    self.oauth_signature, self.oauth_signature_method,
-                    self.oauth_timestamp, self.oauth_token)
+                    oauth_timestamp={}&oauth_token={}&oauth_version=1.0{}",
+                    to_parameters(data), base_url, self.oauth_consumer_key,
+                    self.oauth_nonce, self.oauth_signature, self.oauth_signature_method,
+                    self.oauth_timestamp, self.oauth_token, to_parameters(end))
         }
     }
     #[unimplemented]
