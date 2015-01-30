@@ -23,12 +23,12 @@ impl<'a> fmt::Display for ParamTuple<'a> {
     }
 }
 
-fn to_parameters(data: Vec<(&str, &str)>) -> String {
-    let mut out = String::new();
-    for &it in data.iter() {
-        out = format!("{}{}={}&", out, it.0, it.1);
+fn to_parameters(data: &[String]) -> String {
+    match data {
+        []              => String::new(),
+        [ref param]         => format!("{}", param),
+        [ref param, rest..]  => format!("{}&{}", param, to_parameters(rest))
     }
-    return out;
 }
 
 #[unstable]
@@ -67,37 +67,27 @@ impl<'a> Session<'a> {
                 utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
                 utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
     }
+
     fn get_base_parameters(mut self, mut data: Vec<(&str, &str)>) -> String {
-        let mut out;
-        // TODO: Is there a cleaner way to do this?
-        let mut count = 0;
-        data.sort();
-        for x in data.iter() {
-            if x.0 > "oauth_" {
-                break;
-            }
-            count += 1;
-        }
-        let end = data.split_off(count);
+        let mut params = Vec::new();
 
-        // TODO: this without temporary variables?
-        let (timestamp, nonce) = match self.oauth_signature_method {
-            SignatureMethod::PLAINTEXT => (String::new(), String::new()),
-            _ => (format!("oauth_timestamp={}&", generate_timestamp()),
-                  format!("oauth_nonce={}&", generate_nonce()))
-        };
-        self.oauth_timestamp = timestamp;
-        self.oauth_nonce = nonce;
+        match self.oauth_signature_method {
+            SignatureMethod::PLAINTEXT  => (),
+            _                           => {
+                params.push(format!("oauth_timestamp={}", generate_timestamp()));
+                params.push(format!("oauth_nonce={}", generate_nonce()));}};
 
-        out = format!("{}oauth_consumer_key={}&{}oauth_signature_method={}&{}\
-                oauth_token={}&oauth_version=1.0&{}",
-                to_parameters(data), self.oauth_consumer_key,
-                self.oauth_nonce, self.oauth_signature_method,
-                self.oauth_timestamp, self.oauth_token, to_parameters(end));
-        // get rid of trailing '&'
-        out.pop();
-        out
+        let to_pairs = |&: (key, value) : (&str, &str) | -> String {
+            format!("{}={}", key, value)};
+
+        params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
+        params.push(format!("oauth_signature_method={}", self.oauth_signature_method));
+        params.push(format!("oauth_token={}", self.oauth_token));
+        params.append(&mut (data.into_iter().map(to_pairs).collect::<Vec<String>>()));
+        params.sort();
+        to_parameters(params.as_slice())
     }
+
     #[unimplemented]
     // this function will take API url and data and use that to send
     // an Oauth request. Data shouldn't need to be in alphabetical order
@@ -129,8 +119,10 @@ impl<'a> AuthorizationHeader for Session<'a>{
 
 #[cfg(test)]
 mod tests {
-    use super::Session;
+    use super::{Session, to_parameters};
     use super::super::{HTTPMethod, SignatureMethod, AuthorizationHeader};
+
+    /// TODO: should use example from OAuth v1 RFC
 
     // Session initialization and setup test
     #[test]
@@ -143,6 +135,17 @@ mod tests {
                             "https://api.twitter.com/1.1/statuses/user_timeline.json",
                             vec![("screen_name", "twitterapi"),
                                  ("count", "2")]);
-        println!("{}", base_string);
+        // println!("{}", base_string);
+    }
+
+    #[test]
+    fn to_parameters_test() {
+        let to_pairs = |&: (key, value) : (&str, &str) | -> String {
+            format!("{}={}", key, value)};
+
+        let data = vec![("b", "test"), ("cat", "dog"), ("a", "hello")];
+        let mut s = data.into_iter().map(to_pairs).collect::<Vec<String>>();
+        s.sort();
+        assert!(to_parameters(s.as_slice()) == "a=hello&b=test&cat=dog".to_string())
     }
 }

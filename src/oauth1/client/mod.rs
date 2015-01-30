@@ -62,7 +62,6 @@ pub trait AuthorizationHeader {
 // TODO: add to crypto library?
 // TODO: Should we have a longer nonce than 10?
 fn generate_nonce() -> String {
-
     OsRng::new().unwrap()
                 .gen_ascii_chars()
                 .take(10)
