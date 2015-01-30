@@ -8,8 +8,8 @@ readme = "README.md"
 [dependencies]
 time = "*"
 
-[dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
+# [dependencies.curl]
+# git = "https://github.com/carllerche/curl-rust"
 
 [dependencies.url]
 git = "https://github.com/servo/rust-url"
