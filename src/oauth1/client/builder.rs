@@ -1,4 +1,5 @@
-use super::{SignatureMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::{AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::super::super::crypto::SignatureMethod;
 use std::fmt;
 
 #[derive(Clone)]
@@ -68,10 +69,8 @@ impl Builder {
             signature_method    : self.signature_method,
             version             : self.version,
             realm               : self.realm,
-            nonce               : if self.require_nonce {Some(generate_nonce())}
-                                  else {None},
-            timestamp           : if self.require_timestamp {Some(generate_timestamp())}
-                                  else {None}
+            nonce               : if self.require_nonce {Some(generate_nonce())} else {None},
+            timestamp           : if self.require_timestamp {Some(generate_timestamp())} else {None}
 
         }
     }

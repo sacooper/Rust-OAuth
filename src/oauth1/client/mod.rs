@@ -10,29 +10,6 @@ pub mod builder;
 
 #[derive(Copy, Show, PartialEq, Eq, Clone)]
 #[unstable]
-/// Signature Type
-pub enum SignatureMethod {
-    /// HMAC_SHA1
-    HMAC_SHA1,
-    /// RSA_SHA1
-    RSA_SHA1,
-    /// Plaintext
-    PLAINTEXT
-}
-
-impl fmt::Display for SignatureMethod {
-    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
-        let out = match *self {
-            SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
-            SignatureMethod::RSA_SHA1  => {"RSA-SHA1"},
-            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
-        };
-        write!(f, "{}", out)
-    }
-}
-
-#[derive(Copy, Show, PartialEq, Eq, Clone)]
-#[unstable]
 pub enum HTTPMethod {
     GET,
     POST,
