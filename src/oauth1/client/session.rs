@@ -80,25 +80,20 @@ impl<'a> Session<'a> {
         }
         let end = data.split_off(count);
 
-        // Using an if-else because `generate_nonce()` and `generate_timestamp`
-        // aren't called in PLAINTEXT mode
-        if (self.oauth_signature_method == SignatureMethod::PLAINTEXT) {
-            out = format!("{}oauth_consumer_key={}&oauth_signature_method={}&\
-                    oauth_token={}&oauth_version=1.0{}",
-                    to_parameters(data), self.oauth_consumer_key,
-                    self.oauth_signature_method, self.oauth_token,
-                    to_parameters(end))
+        // TODO: this without temporary variables?
+        let (timestamp, nonce) = match self.oauth_signature_method {
+            SignatureMethod::PLAINTEXT => (String::new(), String::new()),
+            _ => (format!("oauth_timestamp={}&", generate_timestamp()),
+                  format!("oauth_nonce={}&", generate_nonce()))
+        };
+        self.oauth_timestamp = timestamp;
+        self.oauth_nonce = nonce;
 
-        } else {
-            self.oauth_nonce = generate_nonce();
-            self.oauth_timestamp = generate_timestamp();
-            out = format!("{}oauth_consumer_key={}&oauth_nonce={}&\
-                    oauth_signature_method={}&oauth_timestamp={}&\
-                    oauth_token={}&oauth_version=1.0&{}",
-                    to_parameters(data), self.oauth_consumer_key,
-                    self.oauth_nonce, self.oauth_signature_method,
-                    self.oauth_timestamp, self.oauth_token, to_parameters(end));
-        }
+        out = format!("{}oauth_consumer_key={}&{}oauth_signature_method={}&{}\
+                oauth_token={}&oauth_version=1.0&{}",
+                to_parameters(data), self.oauth_consumer_key,
+                self.oauth_nonce, self.oauth_signature_method,
+                self.oauth_timestamp, self.oauth_token, to_parameters(end));
         // get rid of trailing '&'
         out.pop();
         out
@@ -128,7 +123,7 @@ impl<'a> AuthorizationHeader for Session<'a>{
                 SignatureMethod::PLAINTEXT => header,
                 _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
                             header, self.oauth_timestamp, self.oauth_nonce)
-        }
+            }
     }
 }
 
