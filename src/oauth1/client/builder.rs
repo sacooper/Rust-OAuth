@@ -1,4 +1,5 @@
-use super::{SignatureMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::{AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::super::super::crypto::SignatureMethod;
 use std::fmt;
 
 #[derive(Clone)]

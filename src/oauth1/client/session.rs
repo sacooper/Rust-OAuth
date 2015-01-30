@@ -7,8 +7,8 @@ extern crate url;
 use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
 use std::default::Default;
 use std::fmt;
-use super::{SignatureMethod, HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
-
+use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::super::super::crypto::SignatureMethod;
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
         SignatureMethod::HMAC_SHA1}
@@ -113,24 +113,25 @@ impl<'a> Session<'a> {
 // `oauth_timestamp` and `oauth_nonce` need to freshly made
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
-            let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\", \
-                            oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                            oauth_token=\"{}\", oauth_version=\"1.0\"",
-                            self.oauth_consumer_key, self.oauth_signature,
-                            self.oauth_signature_method, self.oauth_token);
+        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\", \
+                        oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                        oauth_token=\"{}\", oauth_version=\"1.0\"",
+                        self.oauth_consumer_key, self.oauth_signature,
+                        self.oauth_signature_method, self.oauth_token);
 
-            match self.oauth_signature_method {
-                SignatureMethod::PLAINTEXT => header,
-                _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                            header, self.oauth_timestamp, self.oauth_nonce)
-            }
+        match self.oauth_signature_method {
+            SignatureMethod::PLAINTEXT => header,
+            _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
+                        header, self.oauth_timestamp, self.oauth_nonce)
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Session;
-    use super::super::{HTTPMethod, SignatureMethod, AuthorizationHeader};
+    use super::super::{HTTPMethod, AuthorizationHeader};
+    use super::super::super::super::crypto::SignatureMethod;
 
     // Session initialization and setup test
     #[test]
