@@ -3,8 +3,8 @@
 //!# Example
 //!
 //! TODO
-extern crate url;
-use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
+// extern crate url;
+// use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
 use std::default::Default;
 use std::fmt;
 use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
@@ -20,14 +20,6 @@ impl<'a> fmt::Display for ParamTuple<'a> {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
         let &ParamTuple((key, value)) = self;
         write!(f, "&{}={}", key, value)
-    }
-}
-
-fn to_parameters(data: &[String]) -> String {
-    match data {
-        []              => String::new(),
-        [ref param]         => format!("{}", param),
-        [ref param, rest..]  => format!("{}&{}", param, to_parameters(rest))
     }
 }
 
@@ -59,34 +51,7 @@ impl<'a> Session<'a> {
             oauth_nonce: Default::default(),
         }
     }
-    // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
-    // generate the `oauth_signature`. It takes a different path dependent
-    // on the signature type
-    fn get_base_string(self, method: HTTPMethod, base_url: &'a str, data: Vec<(&str, &str)>) -> String {
-        format!("{}&{}&{}", method,
-                utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
-                utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
-    }
 
-    fn get_base_parameters(mut self, mut data: Vec<(&str, &str)>) -> String {
-        let mut params = Vec::new();
-
-        match self.oauth_signature_method {
-            SignatureMethod::PLAINTEXT  => (),
-            _                           => {
-                params.push(format!("oauth_timestamp={}", generate_timestamp()));
-                params.push(format!("oauth_nonce={}", generate_nonce()));}};
-
-        let to_pairs = |&: (key, value) : (&str, &str) | -> String {
-            format!("{}={}", key, value)};
-
-        params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
-        params.push(format!("oauth_signature_method={}", self.oauth_signature_method));
-        params.push(format!("oauth_token={}", self.oauth_token));
-        params.append(&mut (data.into_iter().map(to_pairs).collect::<Vec<String>>()));
-        params.sort();
-        to_parameters(params.as_slice())
-    }
 
     #[unimplemented]
     // this function will take API url and data and use that to send
@@ -117,10 +82,28 @@ impl<'a> AuthorizationHeader for Session<'a>{
     }
 }
 
+
+impl <'a> super::BaseString for Session<'a>{
+    fn get_self_paramaters(&self) ->  Vec<String>{
+        let mut params = Vec::new();
+
+        match self.oauth_signature_method {
+            SignatureMethod::PLAINTEXT  => (),
+            _                           => {
+                params.push(format!("oauth_timestamp={}", generate_timestamp()));
+                params.push(format!("oauth_nonce={}", generate_nonce()));}};
+
+        params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
+        params.push(format!("oauth_signature_method={}", self.oauth_signature_method));
+        params.push(format!("oauth_token={}", self.oauth_token));
+        params
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Session, to_parameters};
-    use super::super::{HTTPMethod, AuthorizationHeader};
+    use super::{Session};
+    use super::super::{HTTPMethod, AuthorizationHeader, BaseString};
     use ::crypto::SignatureMethod;
 
     /// TODO: should use example from OAuth v1 RFC
@@ -137,16 +120,5 @@ mod tests {
                             vec![("screen_name", "twitterapi"),
                                  ("count", "2")]);
         // println!("{}", base_string);
-    }
-
-    #[test]
-    fn to_parameters_test() {
-        let to_pairs = |&: (key, value) : (&str, &str) | -> String {
-            format!("{}={}", key, value)};
-
-        let data = vec![("b", "test"), ("cat", "dog"), ("a", "hello")];
-        let mut s = data.into_iter().map(to_pairs).collect::<Vec<String>>();
-        s.sort();
-        assert!(to_parameters(s.as_slice()) == "a=hello&b=test&cat=dog".to_string())
     }
 }

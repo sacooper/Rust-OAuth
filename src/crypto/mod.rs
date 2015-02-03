@@ -24,7 +24,7 @@ impl CircularShift for u32 {
     }
 }
 
-#[derive(Copy, Show, PartialEq, Eq, Clone)]
+#[derive(Copy, Debug, PartialEq, Eq, Clone)]
 #[unstable]
 /// Signature Type
 pub enum SignatureMethod {
