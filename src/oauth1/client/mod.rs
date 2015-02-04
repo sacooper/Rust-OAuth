@@ -1,5 +1,7 @@
 extern crate time;
+extern crate url;
 
+use self::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
 use self::time::now_utc;
 use std::rand::{OsRng, Rng};
 use std::iter::Iterator;
@@ -54,10 +56,9 @@ pub trait BaseString {
     // generate the `oauth_signature`. It takes a different path dependent
     // on the signature type
     fn get_base_string(&self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) -> String {
-        // format!("{}&{}&{}", method,
-        //         utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
-        //         utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
-        String::new()
+        format!("{}&{}&{}", method,
+                utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
+                utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
     }
 
     fn get_self_paramaters(&self) -> Vec<String>;
