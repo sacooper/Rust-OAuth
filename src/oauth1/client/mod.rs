@@ -4,11 +4,10 @@ extern crate url;
 use self::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
 use self::time::now_utc;
 use std::rand::{OsRng, Rng};
-use std::iter::Iterator;
 use std::fmt;
 
 pub mod session;
-pub mod builder;
+pub mod temporary_credentials;
 
 #[derive(Copy, Debug, PartialEq, Eq, Clone)]
 #[unstable]

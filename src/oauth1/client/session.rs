@@ -6,21 +6,12 @@
 // extern crate url;
 // use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
 use std::default::Default;
-use std::fmt;
 use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
-use super::super::super::crypto::SignatureMethod;
+use ::crypto::SignatureMethod;
+
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
         SignatureMethod::HMAC_SHA1}
-}
-
-struct ParamTuple<'a>((&'a str, &'a str));
-
-impl<'a> fmt::Display for ParamTuple<'a> {
-    fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result {
-        let &ParamTuple((key, value)) = self;
-        write!(f, "&{}={}", key, value)
-    }
 }
 
 #[unstable]
@@ -28,6 +19,7 @@ pub struct Session<'a> {
     oauth_consumer_key : &'a str,
     oauth_token : &'a str,
     oauth_token_secret : &'a str,
+    realm : Option<&'a str>,
     oauth_signature_method : SignatureMethod,
     oauth_signature : String,
     oauth_timestamp : String,
@@ -49,7 +41,13 @@ impl<'a> Session<'a> {
             oauth_signature: Default::default(),
             oauth_timestamp: Default::default(),
             oauth_nonce: Default::default(),
+            realm : None,
         }
+    }
+
+    pub fn set_realm(mut self, realm: &'a str) -> Self {
+        self.realm = Some(realm);
+        self
     }
 
 
@@ -57,8 +55,9 @@ impl<'a> Session<'a> {
     // this function will take API url and data and use that to send
     // an Oauth request. Data shouldn't need to be in alphabetical order
     // but will be in it's own data structure.
-    fn request(&self, base_url: String) {
-
+    pub fn request(&mut self, base_url: String) {
+        self.oauth_timestamp = generate_timestamp();
+        self.oauth_nonce = generate_nonce();
     }
 }
 
@@ -68,9 +67,12 @@ impl<'a> Session<'a> {
 // `oauth_timestamp` and `oauth_nonce` need to freshly made
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
-        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\", \
+        let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
                         oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
                         oauth_token=\"{}\", oauth_version=\"1.0\"",
+                        match self.realm {
+                            None => {Default::default()}, 
+                            Some(r)=>{format!("Realm=\"{}\"", r)}},
                         self.oauth_consumer_key, self.oauth_signature,
                         self.oauth_signature_method, self.oauth_token);
 
@@ -90,8 +92,8 @@ impl <'a> super::BaseString for Session<'a>{
         match self.oauth_signature_method {
             SignatureMethod::PLAINTEXT  => (),
             _                           => {
-                params.push(format!("oauth_timestamp={}", generate_timestamp()));
-                params.push(format!("oauth_nonce={}", generate_nonce()));}};
+                params.push(format!("oauth_timestamp={}", self.oauth_timestamp));
+                params.push(format!("oauth_nonce={}", self.oauth_nonce));}};
 
         params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
         params.push(format!("oauth_signature_method={}", self.oauth_signature_method));

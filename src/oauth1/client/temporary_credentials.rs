@@ -1,6 +1,6 @@
 use super::{AuthorizationHeader, generate_nonce, generate_timestamp};
-use super::super::super::crypto::SignatureMethod;
-use std::fmt;
+use ::crypto::SignatureMethod;
+use std::default::Default;
 
 #[derive(Clone)]
 pub struct Builder<'a> {
@@ -18,8 +18,10 @@ pub struct TemporaryCredentials<'a> {
     consumer_key        : &'a str,
     callback_url        : &'a str,
     signature_method    : SignatureMethod,
-    version             : Option<&'a str>,
-    realm               : Option<&'a str>
+    realm               : Option<&'a str>,
+    timestamp           : String,
+    nonce               : String,
+    signature           : String,
 }
 
 impl<'a> Builder<'a> {
@@ -50,47 +52,52 @@ impl<'a> Builder<'a> {
             consumer_key        : self.consumer_key,
             callback_url        : self.callback_url,
             signature_method    : self.signature_method,
-            version             : self.version,
-            realm               : self.realm
+            realm               : self.realm,
+            timestamp           : Default::default(),
+            nonce               : Default::default(),
+            signature           : Default::default(),
         }
     }
 }
 
 impl<'a> TemporaryCredentials<'a> {
-    pub fn send_post_request(self)->Result<(),()>{
+    pub fn request(&mut self)->Result<(),()>{
+        self.timestamp = generate_timestamp();
+        self.nonce = generate_nonce();
         Ok(())
     }
 }
 
 impl<'a> AuthorizationHeader for TemporaryCredentials<'a> {
     fn get_header(&self) -> String {
-        "".to_string()
-    }
-}
+        let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
+                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                oauth_version=\"1.0\"",
+                match self.realm {
+                    None => {Default::default()}, 
+                    Some(r)=>{format!("Realm=\"{}\"", r)}},
+                self.consumer_key, self.signature, self.signature_method);
 
-impl<'a> fmt::Debug for TemporaryCredentials<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let builder : String;
-
-        write!(f, "output")
-    }
-}
-
-// Creates a URL encoded String containing headers
-// This should be called everytime you make a request, since the
-// `oauth_timestamp` and `oauth_nonce` need to freshly made
-impl<'a> AuthorizationHeader for Session<'a>{
-    fn get_header(&self) -> String {
-        let header = format!("Authorization: OAuth oauth_consumer_key=\"{}\", \
-                        oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                        oauth_token=\"{}\", oauth_version=\"1.0\"",
-                        self.oauth_consumer_key, self.oauth_signature,
-                        self.oauth_signature_method, self.oauth_token);
-
-        match self.oauth_signature_method {
+        match self.signature_method {
             SignatureMethod::PLAINTEXT => header,
             _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                        header, self.oauth_timestamp, self.oauth_nonce)
+                        header, self.timestamp, self.nonce)
         }
+    }
+}
+
+
+impl <'a> super::BaseString for TemporaryCredentials<'a>{
+    fn get_self_paramaters(&self) ->  Vec<String>{
+        let mut params = Vec::new();
+        match self.signature_method {
+            SignatureMethod::PLAINTEXT  => (),
+            _                           => {
+                params.push(format!("oauth_timestamp={}", self.timestamp));
+                params.push(format!("oauth_nonce={}", self.nonce));}};
+
+        params.push(format!("oauth_consumer_key={}", self.consumer_key));
+        params.push(format!("oauth_signature_method={}", self.signature_method));
+        params
     }
 }
