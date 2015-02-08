@@ -1,9 +1,10 @@
 extern crate time;
 extern crate url;
+extern crate rand;
 
 use self::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
 use self::time::now_utc;
-use std::rand::{OsRng, Rng};
+use self::rand::{OsRng, Rng};
 use std::fmt;
 
 pub mod session;
