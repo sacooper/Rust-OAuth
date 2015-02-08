@@ -65,7 +65,7 @@ pub trait BaseString {
     fn get_base_parameters(&self, data: Vec<(&str, &str)>) -> String {
         let to_pair = |&: (key, value) : (&str, &str) | -> String {
             format!("{}={}", key, value)};
-        
+
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
         params.sort();
@@ -75,7 +75,7 @@ pub trait BaseString {
 
 
 /// Concatenate all values in `data`, seperated by `sep`
-/// 
+///
 /// ```
 /// use rust_oauth::oauth1::client::concat;
 /// let values = vec!["cat".to_string(), "dog".to_string(), "bird".to_string()];

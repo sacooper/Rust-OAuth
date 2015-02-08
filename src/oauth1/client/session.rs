@@ -52,9 +52,7 @@ impl<'a> Session<'a> {
 
 
     #[unimplemented]
-    // this function will take API url and data and use that to send
-    // an Oauth request. Data shouldn't need to be in alphabetical order
-    // but will be in it's own data structure.
+    // this function will take API url and data and use that to send an Oauth request.
     pub fn request(&mut self, base_url: String) {
         self.oauth_timestamp = generate_timestamp();
         self.oauth_nonce = generate_nonce();
@@ -71,15 +69,16 @@ impl<'a> AuthorizationHeader for Session<'a>{
                         oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
                         oauth_token=\"{}\", oauth_version=\"1.0\"",
                         match self.realm {
-                            None => {Default::default()}, 
-                            Some(r)=>{format!("Realm=\"{}\"", r)}},
+                            None => Default::default(),
+                            Some(r) => format!("Realm=\"{}\"", r)
+                        },
                         self.oauth_consumer_key, self.oauth_signature,
                         self.oauth_signature_method, self.oauth_token);
 
         match self.oauth_signature_method {
             SignatureMethod::PLAINTEXT => header,
             _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                        header, self.oauth_timestamp, self.oauth_nonce)
+                         header, self.oauth_timestamp, self.oauth_nonce)
         }
     }
 }
@@ -93,7 +92,9 @@ impl <'a> super::BaseString for Session<'a>{
             SignatureMethod::PLAINTEXT  => (),
             _                           => {
                 params.push(format!("oauth_timestamp={}", self.oauth_timestamp));
-                params.push(format!("oauth_nonce={}", self.oauth_nonce));}};
+                params.push(format!("oauth_nonce={}", self.oauth_nonce));
+            }
+        };
 
         params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
         params.push(format!("oauth_signature_method={}", self.oauth_signature_method));

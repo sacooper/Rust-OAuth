@@ -25,7 +25,8 @@ pub struct TemporaryCredentials<'a> {
 }
 
 impl<'a> Builder<'a> {
-    pub fn new(request_url : &'a str, consumer_key : &'a str, callback_url : &'a str, signature_method : SignatureMethod) -> Builder<'a> {
+    pub fn new(request_url : &'a str, consumer_key : &'a str, callback_url : &'a str,
+               signature_method : SignatureMethod) -> Builder<'a> {
         Builder {
             request_url         : request_url,
             consumer_key        : consumer_key,
@@ -61,7 +62,7 @@ impl<'a> Builder<'a> {
 }
 
 impl<'a> TemporaryCredentials<'a> {
-    pub fn request(&mut self)->Result<(),()>{
+    pub fn request(&mut self) -> Result<(),()> {
         self.timestamp = generate_timestamp();
         self.nonce = generate_nonce();
         Ok(())
@@ -71,31 +72,32 @@ impl<'a> TemporaryCredentials<'a> {
 impl<'a> AuthorizationHeader for TemporaryCredentials<'a> {
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
-                oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                oauth_version=\"1.0\"",
+                oauth_signature=\"{}\", oauth_signature_method=\"{}\", oauth_version=\"1.0\"",
                 match self.realm {
-                    None => {Default::default()}, 
-                    Some(r)=>{format!("Realm=\"{}\"", r)}},
+                    None => Default::default(),
+                    Some(r) => format!("Realm=\"{}\"", r)
+                },
                 self.consumer_key, self.signature, self.signature_method);
 
         match self.signature_method {
             SignatureMethod::PLAINTEXT => header,
             _ => format!("{}, oauth_timestamp=\"{}\", oauth_nonce=\"{}\"",
-                        header, self.timestamp, self.nonce)
+                         header, self.timestamp, self.nonce)
         }
     }
 }
 
 
-impl <'a> super::BaseString for TemporaryCredentials<'a>{
+impl <'a> super::BaseString for TemporaryCredentials<'a> {
     fn get_self_paramaters(&self) ->  Vec<String>{
         let mut params = Vec::new();
         match self.signature_method {
             SignatureMethod::PLAINTEXT  => (),
             _                           => {
                 params.push(format!("oauth_timestamp={}", self.timestamp));
-                params.push(format!("oauth_nonce={}", self.nonce));}};
-
+                params.push(format!("oauth_nonce={}", self.nonce));
+            }
+        };
         params.push(format!("oauth_consumer_key={}", self.consumer_key));
         params.push(format!("oauth_signature_method={}", self.signature_method));
         params
