@@ -6,7 +6,6 @@ use std::fmt;
 #[unstable]
 pub mod sha1;
 
-#[experimental]
 pub mod rsa;
 
 #[unstable]
@@ -20,7 +19,7 @@ trait CircularShift {
 #[stable]
 impl CircularShift for u32 {
     fn circular_shift(&self, bits : usize) -> u32 {
-        *self << bits  | *self >> (32us - bits)
+        *self << bits  | *self >> (32 - bits)
     }
 }
 
@@ -28,10 +27,10 @@ impl CircularShift for u32 {
 #[unstable]
 /// Signature Type
 pub enum SignatureMethod {
-    /// HMAC_SHA1
-    HMAC_SHA1,
-    /// RSA_SHA1
-    RSA_SHA1,
+    /// HMACSHA1
+    HMACSHA1,
+    /// RSASHA1
+    RSASHA1,
     /// Plaintext
     PLAINTEXT
 }
@@ -39,8 +38,8 @@ pub enum SignatureMethod {
 impl fmt::Display for SignatureMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
-            SignatureMethod::HMAC_SHA1 => {"HMAC-SHA1"},
-            SignatureMethod::RSA_SHA1  => {"RSA-SHA1"},
+            SignatureMethod::HMACSHA1 => {"HMACSHA1"},
+            SignatureMethod::RSASHA1  => {"RSA-SHA1"},
             SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
         };
         write!(f, "{}", out)

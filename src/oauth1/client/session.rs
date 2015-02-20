@@ -3,15 +3,15 @@
 //!# Example
 //!
 //! TODO
-// extern crate url;
-// use self::url::percent_encoding::{utf8_percent_encode, FORM_URLENCODED_ENCODE_SET};
+
+extern crate curl;
 use std::default::Default;
-use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::{AuthorizationHeader, generate_nonce, generate_timestamp};
 use ::crypto::SignatureMethod;
 
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
-        SignatureMethod::HMAC_SHA1}
+        SignatureMethod::HMACSHA1}
 }
 
 #[unstable]
@@ -51,7 +51,6 @@ impl<'a> Session<'a> {
     }
 
 
-    #[unimplemented]
     // this function will take API url and data and use that to send an Oauth request.
     pub fn request(&mut self, base_url: String) {
         self.oauth_timestamp = generate_timestamp();
@@ -66,14 +65,15 @@ impl<'a> Session<'a> {
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
-                        oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
-                        oauth_token=\"{}\", oauth_version=\"1.0\"",
-                        match self.realm {
-                            None => Default::default(),
-                            Some(r) => format!("Realm=\"{}\"", r)
-                        },
-                        self.oauth_consumer_key, self.oauth_signature,
-                        self.oauth_signature_method, self.oauth_token);
+                              oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
+                              oauth_token=\"{}\", oauth_version=\"1.0\"",
+                              match self.realm {
+                                  None => Default::default(),
+                                  Some(r) => format!("Realm=\"{}\"", r)
+                              },
+                              self.oauth_consumer_key, self.oauth_signature,
+                              self.oauth_signature_method, self.oauth_token
+                     );
 
         match self.oauth_signature_method {
             SignatureMethod::PLAINTEXT => header,
@@ -115,13 +115,12 @@ mod tests {
     #[test]
     fn hw() {
         let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
-                            "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
-                            "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
-                            SignatureMethod::HMAC_SHA1);
-        let base_string = s.get_base_string( HTTPMethod::GET,
-                            "https://api.twitter.com/1.1/statuses/user_timeline.json",
-                            vec![("screen_name", "twitterapi"),
-                                 ("count", "2")]);
-        // println!("{}", base_string);
+                             "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+                             "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+                            SignatureMethod::HMACSHA1);
+        let input = vec![("screen_name", "twitterapi"), ("count", "2")];
+        let base_string =
+            s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
+        println!("{}", base_string);
     }
 }

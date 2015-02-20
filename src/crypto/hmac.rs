@@ -53,12 +53,12 @@ pub fn hmac_sha1(msg : &[u8], key : &[u8]) -> [u8; 20]{
     let U8BLOCK(temp) = U8BLOCK(key_new) ^ IPAD;
     v.push_all(&temp);
     v.push_all(msg);
-    let temp2 : [u8; 20] = sha1::sha1(&v[]);
+    let temp2 : [u8; 20] = sha1::sha1(&v);
     v = Vec::new();
     let U8BLOCK(temp) = U8BLOCK(key_new) ^ OPAD;
     v.push_all(&temp);
     v.push_all(&temp2);
-    sha1::sha1(&v[])
+    sha1::sha1(&v)
 
 }
 
