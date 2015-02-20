@@ -4,15 +4,15 @@
 //!
 //! TODO
 
-extern crate curl;
+use super::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
 use std::default::Default;
-use super::{AuthorizationHeader, generate_nonce, generate_timestamp};
+use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
 use ::crypto::SignatureMethod;
 
-impl Default for SignatureMethod {
-    fn default() -> SignatureMethod {
-        SignatureMethod::HMACSHA1}
-}
+macro_rules! encode(($inp : expr ) => (
+        utf8_percent_encode($inp, FORM_URLENCODED_ENCODE_SET)
+    );
+);
 
 #[unstable]
 pub struct Session<'a> {
@@ -31,8 +31,7 @@ impl<'a> Session<'a> {
     // Creates a Session Object, which contains all reused parameters
     // for OAuth 1.0A. This is the Struct used to communicate with a server
     // TODO: Should we use options for oauth_nonce and oauth_timestamp?
-    pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str,
-                signature_method: SignatureMethod) -> Session<'a> {
+    pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
         Session {
             oauth_consumer_key: consumer_key,
             oauth_token: token,
@@ -52,9 +51,14 @@ impl<'a> Session<'a> {
 
 
     // this function will take API url and data and use that to send an Oauth request.
-    pub fn request(&mut self, base_url: String) {
+    pub fn request(&mut self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) {
+        use oauth1::client::BaseString;
         self.oauth_timestamp = generate_timestamp();
         self.oauth_nonce = generate_nonce();
+        self.oauth_signature = self.oauth_signature_method
+                               .sign(self.get_base_string( HTTPMethod::GET, base_url, data),
+                                     format!("{}&{}", encode!(self.oauth_consumer_key), encode!(self.oauth_token_secret)));
+        println!("\n\n{}\n\n", self.oauth_signature);
     }
 }
 
@@ -114,13 +118,11 @@ mod tests {
     // Session initialization and setup test
     #[test]
     fn hw() {
-        let s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
+        let mut s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
                              "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                              "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
                             SignatureMethod::HMACSHA1);
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
-        let base_string =
-            s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
-        println!("{}", base_string);
+        s.request( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
     }
 }

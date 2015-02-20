@@ -2,6 +2,7 @@
 //!
 
 use std::fmt;
+use std::default::Default;
 
 #[unstable]
 pub mod sha1;
@@ -38,14 +39,25 @@ pub enum SignatureMethod {
 impl fmt::Display for SignatureMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
-            SignatureMethod::HMACSHA1 => {"HMACSHA1"},
-            SignatureMethod::RSASHA1  => {"RSA-SHA1"},
-            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
+            SignatureMethod::HMACSHA1 => "HMACSHA1",
+            SignatureMethod::RSASHA1  => "RSA-SHA1",
+            SignatureMethod::PLAINTEXT => "PLAINTEXT"
         };
         write!(f, "{}", out)
     }
 }
 
-pub fn sign() {
+impl Default for SignatureMethod {
+    fn default() -> SignatureMethod {
+        SignatureMethod::HMACSHA1}
+}
 
+impl SignatureMethod {
+    pub fn sign(&self, msg: String, key: String) -> String {
+        match *self{
+            SignatureMethod::HMACSHA1 => format!("HMAC-SHA1: {}", msg),
+            SignatureMethod::RSASHA1  => format!("RSA-SHA1: {}", msg),
+            SignatureMethod::PLAINTEXT => format!("PLAINTEXT: {}", msg)
+        }
+    }
 }
