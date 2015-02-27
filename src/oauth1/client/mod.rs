@@ -39,7 +39,6 @@ pub trait AuthorizationHeader {
 }
 
 // TODO: add to crypto library?
-// TODO: Should we have a longer nonce than 10?
 fn generate_nonce() -> String {
     OsRng::new().unwrap()
                 .gen_ascii_chars()
@@ -60,13 +59,14 @@ pub trait BaseString {
                 utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
                 utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
     }
-
+    /// Returns all the required parameters used in the OAuth request. It takes into account
+    /// the signature method as well as which type of OAuth request you are making
     fn get_self_paramaters(&self) -> Vec<String>;
 
+    /// Takes the required OAuth `self_parameters` and the input data and returns a String with
+    /// all parameters in alphabetical order
     fn get_base_parameters(&self, data: Vec<(&str, &str)>) -> String {
-        let to_pair = |&: (key, value) : (&str, &str) | -> String {
-            format!("{}={}", key, value)};
-
+        let to_pair = |&: (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
         params.sort();

@@ -37,6 +37,7 @@ pub enum SignatureMethod {
 }
 
 impl fmt::Display for SignatureMethod {
+    /// Returns the String used to represent an OAuth signature method in a header
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
             SignatureMethod::HMACSHA1 => "HMAC-SHA1",
@@ -54,6 +55,7 @@ impl Default for SignatureMethod {
 }
 
 impl SignatureMethod {
+    /// Signs a message with the given signature method
     pub fn sign(&self, msg: String, key: String) -> String {
         use std::str;
         match *self {

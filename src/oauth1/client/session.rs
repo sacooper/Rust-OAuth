@@ -30,7 +30,6 @@ pub struct Session<'a> {
 impl<'a> Session<'a> {
     // Creates a Session Object, which contains all reused parameters
     // for OAuth 1.0A. This is the Struct used to communicate with a server
-    // TODO: Should we use options for oauth_nonce and oauth_timestamp?
     pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
         Session {
             oauth_consumer_key: consumer_key,
@@ -50,7 +49,8 @@ impl<'a> Session<'a> {
     }
 
 
-    // this function will take API url and data and use that to send an Oauth request.
+    /// Takes an API url, data, and HTTP Method and a closure and generates all needed
+    /// OAuth parameters and sends an HTTP request using the provided closure
     pub fn request(&mut self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) {
         use oauth1::client::BaseString;
         self.oauth_timestamp = generate_timestamp();
@@ -63,9 +63,7 @@ impl<'a> Session<'a> {
 }
 
 
-// Creates a URL encoded String containing headers
-// This should be called everytime you make a request, since the
-// `oauth_timestamp` and `oauth_nonce` need to freshly made
+// Creates a URL encoded String containing headers for an OAuth request
 impl<'a> AuthorizationHeader for Session<'a>{
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
@@ -115,7 +113,7 @@ mod tests {
     use ::crypto::SignatureMethod;
 
     #[test]
-    // Verifies the validity of the base string. Used the twitter oauth signature generator
+    // Verifies the validity of the base string. Used the twitter OAuth signature generator
     // which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
     fn base_string_test() {
         let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Db9114cda0b95170ff9b164d8226c4b07%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425071144%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
@@ -131,7 +129,6 @@ mod tests {
         };
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
         let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
-        println!("\n\n{}\n\n", base_string);
         assert!(base_string == expected_base_string);
     }
 
