@@ -39,7 +39,7 @@ pub enum SignatureMethod {
 impl fmt::Display for SignatureMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
-            SignatureMethod::HMACSHA1 => "HMACSHA1",
+            SignatureMethod::HMACSHA1 => "HMAC-SHA1",
             SignatureMethod::RSASHA1  => "RSA-SHA1",
             SignatureMethod::PLAINTEXT => "PLAINTEXT"
         };
