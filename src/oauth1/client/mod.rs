@@ -43,7 +43,7 @@ pub trait AuthorizationHeader {
 fn generate_nonce() -> String {
     OsRng::new().unwrap()
                 .gen_ascii_chars()
-                .take(10)
+                .take(32)
                 .collect()
 }
 
