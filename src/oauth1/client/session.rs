@@ -113,15 +113,33 @@ mod tests {
     use super::super::{HTTPMethod, AuthorizationHeader, BaseString};
     use ::crypto::SignatureMethod;
 
-    /// TODO: should use example from OAuth v1 RFC
+    #[test]
+    fn base_string_test() {
+        let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3DwE8kMrZMpm61sJ3PLpdRMCkYxXeTc1tF%26oauth_signature_method%3DHMACSHA1%26oauth_timestamp%3D1425061261%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26screen_name%3Dtwitterapi";
+        let mut s = Session {
+            oauth_consumer_key: "k0azC44q2c0DgF7ua9YZ6Q",
+            oauth_token: "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+            oauth_token_secret : "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+            oauth_signature_method: SignatureMethod::HMACSHA1,
+            oauth_signature: String::new(),
+            oauth_timestamp: String::from_str("1425061261"),
+            oauth_nonce: String::from_str("wE8kMrZMpm61sJ3PLpdRMCkYxXeTc1tF"),
+            realm : None,
+        };
+        let input = vec![("screen_name", "twitterapi"), ("count", "2")];
 
+        let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
+        assert!(base_string == expected_base_string);
+    }
+
+    /// TODO: should use example from OAuth v1 RFC
     // Session initialization and setup test
     #[test]
     fn hw() {
         let mut s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
                              "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                              "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
-                            SignatureMethod::HMACSHA1);
+                             SignatureMethod::HMACSHA1);
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
         s.request( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
     }
