@@ -49,15 +49,19 @@ impl fmt::Display for SignatureMethod {
 
 impl Default for SignatureMethod {
     fn default() -> SignatureMethod {
-        SignatureMethod::HMACSHA1}
+        SignatureMethod::HMACSHA1
+    }
 }
 
 impl SignatureMethod {
     pub fn sign(&self, msg: String, key: String) -> String {
-        match *self{
-            SignatureMethod::HMACSHA1 => format!("HMAC-SHA1: {}", msg),
-            SignatureMethod::RSASHA1  => format!("RSA-SHA1: {}", msg),
-            SignatureMethod::PLAINTEXT => format!("PLAINTEXT: {}", msg)
+        use std::str;
+        match *self {
+            SignatureMethod::HMACSHA1 => {
+                str::from_utf8(&(hmac::hmac_sha1(msg.as_bytes(), key.as_bytes()))).unwrap().to_string()
+            },
+            SignatureMethod::RSASHA1  => String::from_str("RSASHA"),
+            SignatureMethod::PLAINTEXT => String::from_str("PLAINTEXT")
         }
     }
 }
