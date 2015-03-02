@@ -24,6 +24,7 @@ pub struct Session<'a> {
     oauth_signature : String,
     oauth_timestamp : String,
     oauth_nonce : String,
+    oauth_version : bool,
 }
 
 
@@ -40,6 +41,7 @@ impl<'a> Session<'a> {
             oauth_timestamp: Default::default(),
             oauth_nonce: Default::default(),
             realm : None,
+            oauth_version : true,
         }
     }
 
@@ -105,7 +107,9 @@ impl <'a> super::BaseString for Session<'a>{
         params.push(format!("oauth_consumer_key={}", self.oauth_consumer_key));
         params.push(format!("oauth_signature_method={}", self.oauth_signature_method));
         params.push(format!("oauth_token={}", self.oauth_token));
-        params.push(String::from_str("oauth_version=1.0"));
+        if self.oauth_version {
+            params.push(String::from_str("oauth_version=1.0"));
+        }
         params
     }
 }
@@ -130,6 +134,7 @@ mod tests {
             oauth_timestamp: String::from_str("1425071144"),
             oauth_nonce: String::from_str("b9114cda0b95170ff9b164d8226c4b07"),
             realm : None,
+            oauth_version : true,
         };
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
         let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
@@ -150,6 +155,7 @@ mod tests {
             oauth_timestamp: String::from_str("137131201"),
             oauth_nonce: String::from_str("7d8f3e4a"),
             realm : Some("Example"),
+            oauth_version : false,
         };
         let input = vec![("c2", ""), ("a3", "2+q")];
         let base_string = s.get_base_string( HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
