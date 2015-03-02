@@ -1,6 +1,7 @@
 //! Crypto functions for OAuth 1.0
 //!
 
+extern crate serialize;
 use std::fmt;
 use std::default::Default;
 
@@ -57,11 +58,12 @@ impl Default for SignatureMethod {
 impl SignatureMethod {
     /// Signs a message with the given signature method
     pub fn sign(&self, msg: String, key: String) -> String {
-        use std::str;
+        use self::serialize::hex::ToHex;
+
         match *self {
             SignatureMethod::HMACSHA1 => {
                 let signature = hmac::hmac_sha1(msg.as_bytes(), key.as_bytes());
-                str::from_utf8(&signature).unwrap().to_string()
+                (signature).to_hex()
             },
             SignatureMethod::RSASHA1  => String::from_str("RSASHA"),
             SignatureMethod::PLAINTEXT => String::from_str("PLAINTEXT")

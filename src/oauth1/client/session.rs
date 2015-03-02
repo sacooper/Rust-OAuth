@@ -109,7 +109,7 @@ impl <'a> super::BaseString for Session<'a>{
 #[cfg(test)]
 mod tests {
     use super::{Session};
-    use super::super::{HTTPMethod, AuthorizationHeader, BaseString};
+    use ::oauth1::client::{HTTPMethod, AuthorizationHeader, BaseString};
     use ::crypto::SignatureMethod;
 
     #[test]

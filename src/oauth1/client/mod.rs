@@ -66,7 +66,7 @@ pub trait BaseString {
     /// Takes the required OAuth `self_parameters` and the input data and returns a String with
     /// all parameters in alphabetical order
     fn get_base_parameters(&self, data: Vec<(&str, &str)>) -> String {
-        let to_pair = |&: (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
+        let to_pair = | (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
         params.sort();
