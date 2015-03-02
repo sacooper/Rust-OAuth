@@ -55,10 +55,14 @@ impl<'a> Session<'a> {
         use oauth1::client::BaseString;
         self.oauth_timestamp = generate_timestamp();
         self.oauth_nonce = generate_nonce();
-        self.oauth_signature = self.oauth_signature_method
-                               .sign(self.get_base_string( HTTPMethod::GET, base_url, data),
-                                     format!("{}&{}", encode!(self.oauth_consumer_key), encode!(self.oauth_token_secret)));
+        let base_string = self.get_base_string( HTTPMethod::GET, base_url, data);
+        self.oauth_signature = self.generate_signature(base_string);
         println!("\n\n{}\n\n", self.oauth_signature);
+    }
+
+    pub fn generate_signature(&mut self, base_string: String) -> String {
+        let key = format!("{}&{}", encode!(self.oauth_consumer_key), encode!(self.oauth_token_secret));
+        self.oauth_signature_method.sign( base_string, key)
     }
 }
 
@@ -132,10 +136,31 @@ mod tests {
         assert!(base_string == expected_base_string);
     }
 
+    #[test]
     /// TODO: should use example from OAuth v1 RFC
     // Session initialization and setup test
+    fn base_string_rfc_p19_test() {
+        let expected_base_string = "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q%26a3%3Da%26b5%3D%253D%25253D%26c%2540%3D%26c2%3D%26oauth_consumer_key%3D9djdj82h48djs9d2%26oauth_nonce%3D7d8f3e4a%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131201%26oauth_token%3Dkkk9d7dh3k39sjv7";
+        let mut s = Session {
+            oauth_consumer_key: "9djdj82h48djs9d2",
+            oauth_token: "kkk9d7dh3k39sjv7",
+            oauth_token_secret : "my_token",
+            oauth_signature_method: SignatureMethod::HMACSHA1,
+            oauth_signature: String::new(),
+            oauth_timestamp: String::from_str("137131201"),
+            oauth_nonce: String::from_str("7d8f3e4a"),
+            realm : Some("Example"),
+        };
+        let input = vec![("c2", ""), ("a3", "2+q")];
+        let base_string = s.get_base_string( HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
+        println!("\n\n{}\n\n", base_string);
+        assert!(base_string == expected_base_string);
+    }
+
     #[test]
-    fn hw() {
+    // TODO
+    //
+    fn oauth_request_test() {
         let mut s = Session::new("k0azC44q2c0DgF7ua9YZ6Q",
                              "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
                              "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",

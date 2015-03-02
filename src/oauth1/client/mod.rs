@@ -55,9 +55,16 @@ pub trait BaseString {
     // generate the `oauth_signature`. It takes a different path dependent
     // on the signature type
     fn get_base_string(&self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) -> String {
+        // split URL at `?`, to sort parameters
+        let split_url : Vec<&str> = base_url.rsplitn(1, '?').collect();
+        let (url, url_data) = match split_url.len() {
+            1 => (Some(split_url[0]), None),
+            2 => (Some(split_url[1]), Some(split_url[0])),
+            _ => (None, None)
+        };
         format!("{}&{}&{}", method,
-                utf8_percent_encode(base_url.as_slice(), FORM_URLENCODED_ENCODE_SET),
-                utf8_percent_encode(self.get_base_parameters(data).as_slice(), FORM_URLENCODED_ENCODE_SET))
+                utf8_percent_encode(url.unwrap(), FORM_URLENCODED_ENCODE_SET),
+                utf8_percent_encode(self.get_base_parameters(data, url_data).as_slice(), FORM_URLENCODED_ENCODE_SET))
     }
     /// Returns all the required parameters used in the OAuth request. It takes into account
     /// the signature method as well as which type of OAuth request you are making
@@ -65,10 +72,16 @@ pub trait BaseString {
 
     /// Takes the required OAuth `self_parameters` and the input data and returns a String with
     /// all parameters in alphabetical order
-    fn get_base_parameters(&self, data: Vec<(&str, &str)>) -> String {
+    fn get_base_parameters(&self, data: Vec<(&str, &str)>, url_data : Option<&str>) -> String {
         let to_pair = | (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
+        match url_data {
+            None => {}
+            Some(r) => {
+                params.append(&mut r.split('&').map(|val : &str| -> String {val.to_string()}).collect());
+            },
+        };
         params.sort();
         concat(params.as_slice(), "&")
     }
