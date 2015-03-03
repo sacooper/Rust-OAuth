@@ -58,9 +58,9 @@ pub trait BaseString {
         // split URL at `?`, to sort parameters
         let split_url : Vec<&str> = base_url.rsplitn(1, '?').collect();
         let (url, url_data) = match split_url.len() {
-            1 => (Some(split_url[0]), None),
-            2 => (Some(split_url[1]), Some(split_url[0])),
-            _ => (None, None)
+            1 => (Some(split_url[0]), None),    // if there are no parameters in the request url
+            2 => (Some(split_url[1]), Some(split_url[0])),  // if there are parameters
+            _ => (None, None)   // erronous input base_url
         };
         format!("{}&{}&{}", method,
                 utf8_percent_encode(url.unwrap(), FORM_URLENCODED_ENCODE_SET),
@@ -74,6 +74,8 @@ pub trait BaseString {
     /// all parameters in alphabetical order
     fn get_base_parameters(&self, data: Vec<(&str, &str)>, url_data : Option<&str>) -> String {
         let to_pair = | (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
+
+
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
         match url_data {

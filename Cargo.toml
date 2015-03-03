@@ -8,9 +8,10 @@ readme = "README.md"
 [dependencies]
 time = "*"
 rand = "*"
+rustc-serialize = "*"
 
-[dependencies.curl]
-git = "https://github.com/carllerche/curl-rust"
+# [dependencies.curl]
+# git = "https://github.com/carllerche/curl-rust"
 
 [dependencies.url]
 git = "https://github.com/servo/rust-url"
