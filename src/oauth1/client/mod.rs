@@ -75,7 +75,6 @@ pub trait BaseString {
     fn get_base_parameters(&self, data: Vec<(&str, &str)>, url_data : Option<&str>) -> String {
         let to_pair = | (key, value) : (&str, &str) | -> String { format!("{}={}", key, value) };
 
-
         let mut params = self.get_self_paramaters();
         params.append(&mut (data.into_iter().map(to_pair).collect::<Vec<String>>()));
         match url_data {
@@ -85,7 +84,9 @@ pub trait BaseString {
             },
         };
         params.sort();
-        concat(params.as_slice(), "&")
+        // TODO: add a new url-encoding method to do the equivalent
+        concat(params.as_slice(), "&").replace("+", "%20")
+                                      .replace("*","%2A")
     }
 }
 

@@ -59,7 +59,6 @@ impl<'a> Session<'a> {
         self.oauth_nonce = generate_nonce();
         let base_string = self.get_base_string( HTTPMethod::GET, base_url, data);
         self.oauth_signature = self.generate_signature(base_string);
-        println!("\n\n{}\n\n", self.oauth_signature);
     }
 
     pub fn generate_signature(&mut self, base_string: String) -> String {
@@ -160,7 +159,6 @@ mod tests {
         };
         let input = vec![("c2", ""), ("a3", "2+q")];
         let base_string = s.get_base_string( HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
-        println!("\n\n{}\n\n", base_string);
         assert!(base_string == expected_base_string);
     }
 
@@ -172,9 +170,7 @@ mod tests {
         let message = "POST&https%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fupdate.json&include_entities%3Dtrue%26oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0%26status%3DHello%2520Ladies%2520%252B%2520Gentlemen%252C%2520a%2520signed%2520OAuth%2520request%2521";
         let key = format!("{}&{}", encode!("kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw"),
                                    encode!("LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE"));
-        println!("\nkey\n{}\n\n", key);
         let signature = SignatureMethod::HMACSHA1.sign(message.to_string(), key);
-        println!("\nsignature\n{}\n\n", signature);
         assert!(signature == expected_signature);
     }
 }
