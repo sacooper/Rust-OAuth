@@ -17,6 +17,7 @@ macro_rules! encode(($inp : expr ) => (
 #[unstable]
 pub struct Session<'a> {
     oauth_consumer_key : &'a str,
+    oauth_consumer_secret : &'a str,
     oauth_token : &'a str,
     oauth_token_secret : &'a str,
     realm : Option<&'a str>,
@@ -31,11 +32,13 @@ pub struct Session<'a> {
 impl<'a> Session<'a> {
     // Creates a Session Object, which contains all reused parameters
     // for OAuth 1.0A. This is the Struct used to communicate with a server
-    pub fn new (consumer_key: &'a str, token: &'a str, secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
+    pub fn new (consumer_key: &'a str, consumer_secret: &'a str, token: &'a str,
+                token_secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
         Session {
             oauth_consumer_key: consumer_key,
+            oauth_consumer_secret: consumer_secret,
             oauth_token: token,
-            oauth_token_secret : secret,
+            oauth_token_secret: token_secret,
             oauth_signature_method: signature_method,
             oauth_signature: Default::default(),
             oauth_timestamp: Default::default(),
@@ -62,8 +65,8 @@ impl<'a> Session<'a> {
     }
 
     pub fn generate_signature(&mut self, base_string: String) -> String {
-        let key = format!("{}&{}", encode!(self.oauth_consumer_key), encode!(self.oauth_token_secret));
-        self.oauth_signature_method.sign( base_string, key)
+        let key = format!("{}&{}", encode!(self.oauth_consumer_secret), encode!(self.oauth_token_secret));
+        encode!(self.oauth_signature_method.sign( base_string, key).as_slice())
     }
 }
 
@@ -127,6 +130,7 @@ mod tests {
         let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Db9114cda0b95170ff9b164d8226c4b07%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425071144%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
         let s = Session {
             oauth_consumer_key: "k0azC44q2c0DgF7ua9YZ6Q",
+            oauth_consumer_secret: "omqK3feYaKOBgZajh7pqe5AU7oDkmTjLtf1p08ro1M",
             oauth_token: "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
             oauth_token_secret : "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
             oauth_signature_method: SignatureMethod::HMACSHA1,
@@ -148,8 +152,9 @@ mod tests {
         let expected_base_string = "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q%26a3%3Da%26b5%3D%253D%25253D%26c%2540%3D%26c2%3D%26oauth_consumer_key%3D9djdj82h48djs9d2%26oauth_nonce%3D7d8f3e4a%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131201%26oauth_token%3Dkkk9d7dh3k39sjv7";
         let s = Session {
             oauth_consumer_key: "9djdj82h48djs9d2",
+            oauth_consumer_secret: "j49sk3j29djd",
             oauth_token: "kkk9d7dh3k39sjv7",
-            oauth_token_secret : "my_token",
+            oauth_token_secret : "dh893hdasih9",
             oauth_signature_method: SignatureMethod::HMACSHA1,
             oauth_signature: String::new(),
             oauth_timestamp: String::from_str("137131201"),
@@ -172,5 +177,32 @@ mod tests {
                                    encode!("LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE"));
         let signature = SignatureMethod::HMACSHA1.sign(message.to_string(), key);
         assert!(signature == expected_signature);
+    }
+    #[test]
+    // Full OAuth generation tests. Uses the twitter OAuth signature generator
+    // which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
+    fn oauth_full_flow_twitter_test() {
+        let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Dbfa380dd4f1aadc18145c1385130305b%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425427447%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
+        let expected_oauth_signature = "BJPEhpBgsJ4WlBDp7v%2BvKp9pTB8%3D";
+
+        let input = vec![("screen_name", "twitterapi"), ("count", "2")];
+        let mut s = Session {
+            oauth_consumer_key: "k0azC44q2c0DgF7ua9YZ6Q",
+            oauth_consumer_secret: "omqK3feYaKOBgZajh7pqe5AU7oDkmTjLtf1p08ro1M",
+            oauth_token: "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
+            oauth_token_secret : "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc",
+            oauth_signature_method: SignatureMethod::HMACSHA1,
+            oauth_signature: String::new(),
+            oauth_timestamp: String::from_str("1425427447"),
+            oauth_nonce: String::from_str("bfa380dd4f1aadc18145c1385130305b"),
+            realm : None,
+            oauth_version : true,
+        };
+        let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
+        assert!(base_string == expected_base_string);
+
+        let signature = s.generate_signature(base_string);
+        println!("\n\n{}\n\n", signature);
+        assert!(signature == expected_oauth_signature);
     }
 }
