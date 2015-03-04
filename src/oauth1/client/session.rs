@@ -56,12 +56,15 @@ impl<'a> Session<'a> {
 
     /// Takes an API url, data, and HTTP Method and a closure and generates all needed
     /// OAuth parameters and sends an HTTP request using the provided closure
-    pub fn request(&mut self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) {
+    pub fn request<T, F>(&mut self, method: HTTPMethod, base_url: &str,
+                    data: Vec<(&str, &str)>, callback: F) -> T
+                    where F: Fn(Session, HTTPMethod, &str, Vec<(&str, &str)>) -> T {
         use oauth1::client::BaseString;
         self.oauth_timestamp = generate_timestamp();
         self.oauth_nonce = generate_nonce();
-        let base_string = self.get_base_string( HTTPMethod::GET, base_url, data);
+        let base_string = self.get_base_string(HTTPMethod::GET, base_url, data.clone());
         self.oauth_signature = self.generate_signature(base_string);
+        callback(self.clone(), method, base_url, data)
     }
 
     pub fn generate_signature(&mut self, base_string: String) -> String {
@@ -72,7 +75,7 @@ impl<'a> Session<'a> {
 
 
 // Creates a URL encoded String containing headers for an OAuth request
-impl<'a> AuthorizationHeader for Session<'a>{
+impl<'a> AuthorizationHeader for Session<'a> {
     fn get_header(&self) -> String {
         let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
                               oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
@@ -93,8 +96,25 @@ impl<'a> AuthorizationHeader for Session<'a>{
     }
 }
 
+impl<'a>  Clone for Session<'a>  {
+    fn clone(&self) -> Self {
+        Session {
+            oauth_consumer_key: self.oauth_consumer_key,
+            oauth_consumer_secret: self.oauth_consumer_secret,
+            oauth_token: self.oauth_token,
+            oauth_token_secret: self.oauth_token_secret,
+            oauth_signature_method: self.oauth_signature_method,
+            oauth_signature: self.oauth_signature.clone(),
+            oauth_timestamp: self.oauth_timestamp.clone(),
+            oauth_nonce: self.oauth_nonce.clone(),
+            realm : self.realm,
+            oauth_version : self.oauth_version,
+        }
+    }
+}
 
-impl <'a> super::BaseString for Session<'a>{
+
+impl <'a> super::BaseString for Session<'a> {
     fn get_self_paramaters(&self) ->  Vec<String>{
         let mut params = Vec::new();
 
@@ -115,6 +135,7 @@ impl <'a> super::BaseString for Session<'a>{
         params
     }
 }
+
 
 #[cfg(test)]
 mod tests {

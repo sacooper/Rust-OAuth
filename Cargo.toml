@@ -10,8 +10,9 @@ time = "*"
 rand = "*"
 rustc-serialize = "*"
 
-# [dependencies.curl]
-# git = "https://github.com/carllerche/curl-rust"
+[dependencies.curl]
+git = "https://github.com/kanetkarster/curl-rust"
+branch = "response"
 
 [dependencies.url]
 git = "https://github.com/servo/rust-url"
