@@ -99,7 +99,7 @@ fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
 
     t = 0;
     while t < 20 {
-        temp = a.circular_shift(5) + ((b & c) | (!b & d)) + e + w[t] + K0;
+        temp = a.circular_shift(5).wrapping_add((b & c) | (!b & d)).wrapping_add(e).wrapping_add(w[t]).wrapping_add(K0);
         e = d;
         d = c;
         c = b.circular_shift(30);
@@ -109,7 +109,7 @@ fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     }
 
     while t < 40 {
-        temp = a.circular_shift(5) + (b ^ c ^ d) + e + w[t] + K1;
+        temp = a.circular_shift(5).wrapping_add(b ^ c ^ d).wrapping_add(e).wrapping_add(w[t]).wrapping_add(K1);
         e = d;
         d = c;
         c = b.circular_shift(30);
@@ -119,7 +119,7 @@ fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     }
 
     while t < 60 {
-        temp = a.circular_shift(5) + ((b & c) | (b & d) | (c & d)) + e + w[t] + K2;
+        temp = a.circular_shift(5).wrapping_add((b & c) | (b & d) | (c & d)).wrapping_add(e).wrapping_add(w[t]).wrapping_add(K2);
         e = d;
         d = c;
         c = b.circular_shift(30);
@@ -129,7 +129,7 @@ fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
     }
 
     while t < 80 {
-        temp = a.circular_shift(5) + (b ^ c ^ d) + e + w[t] + K3;
+        temp = a.circular_shift(5).wrapping_add(b ^ c ^ d).wrapping_add(e).wrapping_add(w[t]).wrapping_add(K3);
         e = d;
         d = c;
         c = b.circular_shift(30);
@@ -137,11 +137,11 @@ fn digest_block(block : &[u8; 64], h : &mut[u32; 5]){
         a = temp;
         t += 1;
     }
-    h[0] += a;
-    h[1] += b;
-    h[2] += c;
-    h[3] += d;
-    h[4] += e;
+    h[0] = h[0].wrapping_add(a);
+    h[1] = h[1].wrapping_add(b);
+    h[2] = h[2].wrapping_add(c);
+    h[3] = h[3].wrapping_add(d);
+    h[4] = h[4].wrapping_add(e);
 }
 
 #[cfg(test)]
@@ -224,5 +224,12 @@ mod tests {
         0x93u8, 0xb6u8, 0x80u8, 0xd2u8, 0x2du8,
         0x5cu8, 0x0au8, 0x82u8, 0x4bu8, 0x96u8,
         0x4bu8, 0x60u8, 0x8du8, 0x8fu8, 0x80u8])
+    }
+
+    #[test]
+    fn test(){
+        let test = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX".as_bytes();
+        let x = sha1(test);
+        let y : &[u8] = &x;
     }
 }

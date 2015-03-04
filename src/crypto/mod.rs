@@ -21,7 +21,7 @@ trait CircularShift {
 #[stable]
 impl CircularShift for u32 {
     fn circular_shift(&self, bits : usize) -> u32 {
-        *self << bits  | *self >> (32 - bits)
+        (*self) << bits  | (*self) >> (32 - bits)
     }
 }
 
