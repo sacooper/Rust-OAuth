@@ -64,7 +64,7 @@ pub trait BaseString {
     fn get_self_paramaters(&self) -> Vec<String>;
 
     fn get_base_parameters(&self, data: Vec<(&str, &str)>) -> String {
-        let to_pair = |&: (key, value) : (&str, &str) | -> String {
+        let to_pair = |(key, value) : (&str, &str) | -> String {
             format!("{}={}", key, value)};
 
         let mut params = self.get_self_paramaters();
