@@ -1,4 +1,4 @@
-//! OAuth 1
+//! Holds all parameters needed to make OAuth requests
 //!
 //!# Example
 //!
@@ -30,8 +30,8 @@ pub struct Session<'a> {
 
 
 impl<'a> Session<'a> {
-    // Creates a Session Object, which contains all reused parameters
-    // for OAuth 1.0A. This is the Struct used to communicate with a server
+    /// Creates a Session Object, which contains all reused parameters
+    /// for OAuth 1.0A. This is the Struct used to communicate with a server
     pub fn new (consumer_key: &'a str, consumer_secret: &'a str, token: &'a str,
                 token_secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
         Session {
@@ -74,15 +74,15 @@ impl<'a> Session<'a> {
 }
 
 
-// Creates a URL encoded String containing headers for an OAuth request
+/// Creates a URL encoded String containing headers formated for an OAuth request
 impl<'a> AuthorizationHeader for Session<'a> {
     fn get_header(&self) -> String {
-        let header = format!("Authorization: OAuth {}oauth_consumer_key=\"{}\", \
+        let header = format!("OAuth {}oauth_consumer_key=\"{}\", \
                               oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
                               oauth_token=\"{}\", oauth_version=\"1.0\"",
                               match self.realm {
                                   None => Default::default(),
-                                  Some(r) => format!("Realm=\"{}\"", r)
+                                  Some(r) => format!("realm=\"{}\", ", r)
                               },
                               self.oauth_consumer_key, self.oauth_signature,
                               self.oauth_signature_method, self.oauth_token
@@ -145,8 +145,8 @@ mod tests {
     use ::crypto::SignatureMethod;
 
     #[test]
-    // Verifies the validity of the base string. Used the twitter OAuth signature generator
-    // which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
+    /// Verifies the validity of the base string. Used the twitter OAuth signature generator
+    /// which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
     fn base_string_twitter_test() {
         let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Db9114cda0b95170ff9b164d8226c4b07%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425071144%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
         let s = Session {
@@ -167,8 +167,8 @@ mod tests {
     }
 
     #[test]
-    // Session initialization and setup test. Uses an example from [RFC5849 3.4.1]
-    // (https://tools.ietf.org/html/rfc5849#section-3.4.1)
+    /// Session initialization and setup test. Uses an example from [RFC5849 3.4.1]
+    /// (https://tools.ietf.org/html/rfc5849#section-3.4.1)
     fn base_string_rfc_test() {
         let expected_base_string = "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q%26a3%3Da%26b5%3D%253D%25253D%26c%2540%3D%26c2%3D%26oauth_consumer_key%3D9djdj82h48djs9d2%26oauth_nonce%3D7d8f3e4a%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131201%26oauth_token%3Dkkk9d7dh3k39sjv7";
         let s = Session {
@@ -189,8 +189,8 @@ mod tests {
     }
 
     #[test]
-    // Verifies that the signature is properly generated. Uses the [example from
-    // twitter](https://dev.twitter.com/oauth/overview/creating-signatures) as a test case
+    /// Verifies that the signature is properly generated. Uses the [example from
+    /// twitter](https://dev.twitter.com/oauth/overview/creating-signatures) as a test case
     fn hmac_sha1_signature_test() {
         let expected_signature = String::from_str("tnnArxj06cWHq44gCs1OSKk/jLY=");
         let message = "POST&https%3A%2F%2Fapi.twitter.com%2F1%2Fstatuses%2Fupdate.json&include_entities%3Dtrue%26oauth_consumer_key%3Dxvz1evFS4wEEPTGEFPHBog%26oauth_nonce%3DkYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1318622958%26oauth_token%3D370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb%26oauth_version%3D1.0%26status%3DHello%2520Ladies%2520%252B%2520Gentlemen%252C%2520a%2520signed%2520OAuth%2520request%2521";
@@ -199,9 +199,37 @@ mod tests {
         let signature = SignatureMethod::HMACSHA1.sign(message.to_string(), key);
         assert!(signature == expected_signature);
     }
+
     #[test]
-    // Full OAuth generation tests. Uses the twitter OAuth signature generator
-    // which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
+    /// Verifies that the OAuth header contains all needed values
+    fn oauth_header_test() {
+        let s = Session {
+            oauth_consumer_key: "9djdj82h48djs9d2",
+            oauth_consumer_secret: "j49sk3j29djd",
+            oauth_token: "kkk9d7dh3k39sjv7",
+            oauth_token_secret : "dh893hdasih9",
+            oauth_signature_method: SignatureMethod::HMACSHA1,
+            oauth_signature: String::from_str("bYT5CMsGcbgUdFHObYMEfcx6bsw%3D"),
+            oauth_timestamp: String::from_str("137131201"),
+            oauth_nonce: String::from_str("7d8f3e4a"),
+            realm : Some("Example"),
+            oauth_version : false,
+        };
+        let header = s.get_header();
+
+        assert!(header.starts_with("OAuth"));
+        assert!(header.contains("realm=\"Example\""));
+        assert!(header.contains("oauth_consumer_key=\"9djdj82h48djs9d2\""));
+        assert!(header.contains("oauth_token=\"kkk9d7dh3k39sjv7\""));
+        assert!(header.contains("oauth_signature_method=\"HMAC-SHA1\""));
+        assert!(header.contains("oauth_timestamp=\"137131201\""));
+        assert!(header.contains("oauth_nonce=\"7d8f3e4a\""));
+        assert!(header.contains("oauth_signature=\"bYT5CMsGcbgUdFHObYMEfcx6bsw%3D\""))
+    }
+
+    #[test]
+    /// Full OAuth generation tests. Uses the twitter OAuth signature generator
+    /// which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
     fn oauth_full_flow_twitter_test() {
         let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Dbfa380dd4f1aadc18145c1385130305b%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425427447%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
         let expected_oauth_signature = "BJPEhpBgsJ4WlBDp7v%2BvKp9pTB8%3D";
@@ -223,7 +251,6 @@ mod tests {
         assert!(base_string == expected_base_string);
 
         let signature = s.generate_signature(base_string);
-        println!("\n\n{}\n\n", signature);
         assert!(signature == expected_oauth_signature);
     }
 }

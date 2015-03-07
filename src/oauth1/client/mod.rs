@@ -51,9 +51,9 @@ fn generate_timestamp() -> String{
 }
 
 pub trait BaseString {
-    // Returns a base string URI, ecnoded with [RFC3986]. This gets used to
-    // generate the `oauth_signature`. It takes a different path dependent
-    // on the signature type
+    /// Returns a base string URI, ecnoded with [RFC3986]. This gets used to
+    /// generate the `oauth_signature`. It takes a different path dependent
+    /// on the signature type
     fn get_base_string(&self, method: HTTPMethod, base_url: &str, data: Vec<(&str, &str)>) -> String {
         // split URL at `?`, to sort parameters
         let split_url : Vec<&str> = base_url.rsplitn(1, '?').collect();
