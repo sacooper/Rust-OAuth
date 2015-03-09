@@ -1,7 +1,9 @@
 //! Crypto functions for OAuth 1.0
 //!
 
+extern crate "rustc-serialize" as serialize;
 use std::fmt;
+use std::default::Default;
 
 #[unstable]
 pub mod sha1;
@@ -36,16 +38,35 @@ pub enum SignatureMethod {
 }
 
 impl fmt::Display for SignatureMethod {
+    /// Returns the String used to represent an OAuth signature method in a header
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
-            SignatureMethod::HMACSHA1 => {"HMACSHA1"},
-            SignatureMethod::RSASHA1  => {"RSA-SHA1"},
-            SignatureMethod::PLAINTEXT => {"PLAINTEXT"}
+            SignatureMethod::HMACSHA1 => "HMAC-SHA1",
+            SignatureMethod::RSASHA1  => "RSA-SHA1",
+            SignatureMethod::PLAINTEXT => "PLAINTEXT"
         };
         write!(f, "{}", out)
     }
 }
 
-pub fn sign() {
+impl Default for SignatureMethod {
+    fn default() -> SignatureMethod {
+        SignatureMethod::HMACSHA1
+    }
+}
 
+impl SignatureMethod {
+    /// Signs a message with the given signature method
+    pub fn sign(&self, msg: String, key: String) -> String {
+        use self::serialize::base64::{self, ToBase64};
+        match *self {
+            SignatureMethod::HMACSHA1 => {
+                hmac::hmac_sha1(msg.as_bytes(), key.as_bytes())
+                               .as_slice()
+                               .to_base64(base64::STANDARD)
+            },
+            SignatureMethod::RSASHA1  => String::from_str("RSASHA"),
+            SignatureMethod::PLAINTEXT => String::from_str("PLAINTEXT")
+        }
+    }
 }
