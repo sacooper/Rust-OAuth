@@ -23,11 +23,11 @@ pub enum HTTPMethod {
 impl fmt::Display for HTTPMethod {
     fn fmt(&self, f : &mut fmt::Formatter) -> fmt::Result{
         let out = match *self {
-            HTTPMethod::GET     => {"GET"},
-            HTTPMethod::POST    => {"POST"},
-            HTTPMethod::DELETE  => {"DELETE"},
-            HTTPMethod::PUT     => {"PUT"},
-            HTTPMethod::HEAD   => {"HEAD"}
+            HTTPMethod::GET     => "GET",
+            HTTPMethod::POST    => "POST",
+            HTTPMethod::DELETE  => "DELETE",
+            HTTPMethod::PUT     => "PUT",
+            HTTPMethod::HEAD    => "HEAD"
         };
         write!(f, "{}", out)
     }
@@ -46,7 +46,7 @@ fn generate_nonce() -> String {
                 .collect()
 }
 
-fn generate_timestamp() -> String{
+fn generate_timestamp() -> String {
     now_utc().to_timespec().sec.to_string()
 }
 
@@ -58,9 +58,9 @@ pub trait BaseString {
         // split URL at `?`, to sort parameters
         let split_url : Vec<&str> = base_url.rsplitn(1, '?').collect();
         let (url, url_data) = match split_url.len() {
-            1 => (Some(split_url[0]), None),    // if there are no parameters in the request url
+            1 => (Some(split_url[0]), None),                // no parameters in the request url
             2 => (Some(split_url[1]), Some(split_url[0])),  // if there are parameters
-            _ => (None, None)   // erronous input base_url
+            _ => (None, None)                               // erronous input base_url
         };
         format!("{}&{}&{}", method,
                 utf8_percent_encode(url.unwrap(), FORM_URLENCODED_ENCODE_SET),
