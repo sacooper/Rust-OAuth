@@ -4,10 +4,10 @@
 //!
 //! TODO
 
-use super::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
+use oauth1::client::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
 use std::default::Default;
-use super::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
-use ::crypto::SignatureMethod;
+use oauth1::client::{HTTPMethod, AuthorizationHeader, generate_nonce, generate_timestamp};
+use crypto::SignatureMethod;
 
 macro_rules! encode(($inp : expr ) => (
         utf8_percent_encode($inp, FORM_URLENCODED_ENCODE_SET)
@@ -69,7 +69,7 @@ impl<'a> Session<'a> {
 
     pub fn generate_signature(&mut self, base_string: String) -> String {
         let key = format!("{}&{}", encode!(self.oauth_consumer_secret), encode!(self.oauth_token_secret));
-        encode!(self.oauth_signature_method.sign( base_string, key).as_slice())
+        encode!(self.oauth_signature_method.sign(base_string, key).as_slice())
     }
 }
 
@@ -139,10 +139,10 @@ impl <'a> super::BaseString for Session<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Session};
-    use ::oauth1::client::{HTTPMethod, AuthorizationHeader, BaseString};
+    use super::Session;
+    use oauth1::client::{HTTPMethod, AuthorizationHeader, BaseString};
     use oauth1::client::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
-    use ::crypto::SignatureMethod;
+    use crypto::SignatureMethod;
 
     #[test]
     /// Verifies the validity of the base string. Used the twitter OAuth signature generator
@@ -162,8 +162,8 @@ mod tests {
             oauth_version : true,
         };
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
-        let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
-        assert!(base_string == expected_base_string);
+        let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
+        assert_eq!(base_string, expected_base_string);
     }
 
     #[test]
@@ -184,8 +184,8 @@ mod tests {
             oauth_version : false,
         };
         let input = vec![("c2", ""), ("a3", "2+q")];
-        let base_string = s.get_base_string( HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
-        assert!(base_string == expected_base_string);
+        let base_string = s.get_base_string(HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
+        assert_eq!(base_string, expected_base_string);
     }
 
     #[test]
@@ -197,7 +197,7 @@ mod tests {
         let key = format!("{}&{}", encode!("kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw"),
                                    encode!("LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE"));
         let signature = SignatureMethod::HMACSHA1.sign(message.to_string(), key);
-        assert!(signature == expected_signature);
+        assert_eq!(signature, expected_signature);
     }
 
     #[test]
@@ -247,10 +247,10 @@ mod tests {
             realm : None,
             oauth_version : true,
         };
-        let base_string = s.get_base_string( HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
-        assert!(base_string == expected_base_string);
+        let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
+        assert_eq!(base_string, expected_base_string);
 
         let signature = s.generate_signature(base_string);
-        assert!(signature == expected_oauth_signature);
+        assert_eq!(signature, expected_oauth_signature);
     }
 }

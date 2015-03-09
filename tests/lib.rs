@@ -36,5 +36,5 @@ fn twitter_api_rustcurl() {
                          vec![("screen_name", "twitterapi"), ("count", "2")] , rust_curl_callback);
     let out = str::from_utf8(resp.get_body());
     println!("body={}\ncode={}\n", out.unwrap(), resp.get_code());
-    assert!(resp.get_code() == 200);
+    assert_eq!(resp.get_code(), 200);
 }
