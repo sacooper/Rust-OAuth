@@ -148,6 +148,7 @@ mod tests {
     use oauth1::client::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
     use crypto::SignatureMethod;
 
+    #[allow(unused_variables)]
     fn test_callback(session: Session<bool>, method: HTTPMethod,
                      url: &str, data: Vec<(&str, &str)>) -> bool {
         false
