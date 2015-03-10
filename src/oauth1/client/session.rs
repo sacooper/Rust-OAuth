@@ -26,7 +26,7 @@ pub struct Session<'a, CbRet> {
     oauth_timestamp : String,
     oauth_nonce : String,
     oauth_version : bool,
-    callback :  &'a fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet,
+    callback : fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet,
 }
 
 
@@ -35,7 +35,7 @@ impl<'a, CbRet> Session<'a, CbRet> {
     /// for OAuth 1.0A. This is the Struct used to communicate with a server
     pub fn new (consumer_key: &'a str, consumer_secret: &'a str, token: &'a str,
                 token_secret: &'a str, signature_method: SignatureMethod,
-                cb: &'a fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet)
+                cb: fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet)
                 -> Session<'a, CbRet> {
         Session {
             oauth_consumer_key: consumer_key,
@@ -169,7 +169,7 @@ mod tests {
             oauth_nonce: String::from_str("b9114cda0b95170ff9b164d8226c4b07"),
             realm : None,
             oauth_version : true,
-            callback: &test_callback,
+            callback: test_callback,
         };
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
         let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
@@ -192,7 +192,7 @@ mod tests {
             oauth_nonce: String::from_str("7d8f3e4a"),
             realm : Some("Example"),
             oauth_version : false,
-            callback: &test_callback,
+            callback: test_callback,
         };
         let input = vec![("c2", ""), ("a3", "2+q")];
         let base_string = s.get_base_string(HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
@@ -225,7 +225,7 @@ mod tests {
             oauth_nonce: String::from_str("7d8f3e4a"),
             realm : Some("Example"),
             oauth_version : false,
-            callback: &test_callback,
+            callback: test_callback,
         };
         let header = s.get_header();
 
@@ -258,7 +258,7 @@ mod tests {
             oauth_nonce: String::from_str("bfa380dd4f1aadc18145c1385130305b"),
             realm : None,
             oauth_version : true,
-            callback: &test_callback,
+            callback: test_callback,
         };
         let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
         assert_eq!(base_string, expected_base_string);

@@ -31,7 +31,7 @@ fn twitter_api_rustcurl() {
                         "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj", // token
                         "zvNmU9daj9V00118H9KQBozQQsZt4pyLQcZdc", // token_secret
                         SignatureMethod::HMACSHA1, // signature_method
-                        &rust_curl_callback,
+                        rust_curl_callback,
                     );
     let resp = s.request(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json",
                          vec![("screen_name", "twitterapi"), ("count", "2")]);
