@@ -15,7 +15,7 @@ macro_rules! encode(($inp : expr ) => (
 );
 
 #[unstable]
-pub struct Session<'a> {
+pub struct Session<'a, CbRet> {
     oauth_consumer_key : &'a str,
     oauth_consumer_secret : &'a str,
     oauth_token : &'a str,
@@ -26,14 +26,17 @@ pub struct Session<'a> {
     oauth_timestamp : String,
     oauth_nonce : String,
     oauth_version : bool,
+    callback : fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet,
 }
 
 
-impl<'a> Session<'a> {
+impl<'a, CbRet> Session<'a, CbRet> {
     /// Creates a Session Object, which contains all reused parameters
     /// for OAuth 1.0A. This is the Struct used to communicate with a server
     pub fn new (consumer_key: &'a str, consumer_secret: &'a str, token: &'a str,
-                token_secret: &'a str, signature_method: SignatureMethod) -> Session<'a> {
+                token_secret: &'a str, signature_method: SignatureMethod,
+                cb: fn(Session<CbRet>, HTTPMethod, &str, Vec<(&str, &str)>) -> CbRet)
+                -> Session<'a, CbRet> {
         Session {
             oauth_consumer_key: consumer_key,
             oauth_consumer_secret: consumer_secret,
@@ -45,6 +48,7 @@ impl<'a> Session<'a> {
             oauth_nonce: Default::default(),
             realm : None,
             oauth_version : true,
+            callback : cb,
         }
     }
 
@@ -56,15 +60,14 @@ impl<'a> Session<'a> {
 
     /// Takes an API url, data, and HTTP Method and a closure and generates all needed
     /// OAuth parameters and sends an HTTP request using the provided closure
-    pub fn request<T, F>(&mut self, method: HTTPMethod, base_url: &str,
-                    data: Vec<(&str, &str)>, callback: F) -> T
-                    where F: Fn(Session, HTTPMethod, &str, Vec<(&str, &str)>) -> T {
+    pub fn request(&mut self, method: HTTPMethod, base_url: &str,
+                        data: Vec<(&str, &str)>) -> CbRet {
         use oauth1::client::BaseString;
         self.oauth_timestamp = generate_timestamp();
         self.oauth_nonce = generate_nonce();
         let base_string = self.get_base_string(HTTPMethod::GET, base_url, data.clone());
         self.oauth_signature = self.generate_signature(base_string);
-        callback(self.clone(), method, base_url, data)
+        (self.callback)(self.clone(), method, base_url, data)
     }
 
     pub fn generate_signature(&mut self, base_string: String) -> String {
@@ -75,7 +78,7 @@ impl<'a> Session<'a> {
 
 
 /// Creates a URL encoded String containing headers formated for an OAuth request
-impl<'a> AuthorizationHeader for Session<'a> {
+impl<'a, CbRet> AuthorizationHeader for Session<'a, CbRet> {
     fn get_header(&self) -> String {
         let header = format!("OAuth {}oauth_consumer_key=\"{}\", \
                               oauth_signature=\"{}\", oauth_signature_method=\"{}\", \
@@ -96,7 +99,7 @@ impl<'a> AuthorizationHeader for Session<'a> {
     }
 }
 
-impl<'a>  Clone for Session<'a>  {
+impl<'a, CbRet>  Clone for Session<'a, CbRet>  {
     fn clone(&self) -> Self {
         Session {
             oauth_consumer_key: self.oauth_consumer_key,
@@ -109,12 +112,13 @@ impl<'a>  Clone for Session<'a>  {
             oauth_nonce: self.oauth_nonce.clone(),
             realm : self.realm,
             oauth_version : self.oauth_version,
+            callback: self.callback,
         }
     }
 }
 
 
-impl <'a> super::BaseString for Session<'a> {
+impl <'a, CbRet> super::BaseString for Session<'a, CbRet> {
     fn get_self_paramaters(&self) ->  Vec<String>{
         let mut params = Vec::new();
 
@@ -144,12 +148,18 @@ mod tests {
     use oauth1::client::url::{FORM_URLENCODED_ENCODE_SET, utf8_percent_encode};
     use crypto::SignatureMethod;
 
+    #[allow(unused_variables)]
+    fn test_callback(session: Session<bool>, method: HTTPMethod,
+                     url: &str, data: Vec<(&str, &str)>) -> bool {
+        false
+    }
+
     #[test]
     /// Verifies the validity of the base string. Used the twitter OAuth signature generator
     /// which can be [found here](https://dev.twitter.com/oauth/tools/signature-generator/4128189?nid=731)
     fn base_string_twitter_test() {
         let expected_base_string = "GET&https%3A%2F%2Fapi.twitter.com%2F1.1%2Fstatuses%2Fuser_timeline.json&count%3D2%26oauth_consumer_key%3Dk0azC44q2c0DgF7ua9YZ6Q%26oauth_nonce%3Db9114cda0b95170ff9b164d8226c4b07%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D1425071144%26oauth_token%3D119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj%26oauth_version%3D1.0%26screen_name%3Dtwitterapi";
-        let s = Session {
+        let s = Session::<bool> {
             oauth_consumer_key: "k0azC44q2c0DgF7ua9YZ6Q",
             oauth_consumer_secret: "omqK3feYaKOBgZajh7pqe5AU7oDkmTjLtf1p08ro1M",
             oauth_token: "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
@@ -160,6 +170,7 @@ mod tests {
             oauth_nonce: String::from_str("b9114cda0b95170ff9b164d8226c4b07"),
             realm : None,
             oauth_version : true,
+            callback: test_callback,
         };
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
         let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
@@ -171,7 +182,7 @@ mod tests {
     /// (https://tools.ietf.org/html/rfc5849#section-3.4.1)
     fn base_string_rfc_test() {
         let expected_base_string = "POST&http%3A%2F%2Fexample.com%2Frequest&a2%3Dr%2520b%26a3%3D2%2520q%26a3%3Da%26b5%3D%253D%25253D%26c%2540%3D%26c2%3D%26oauth_consumer_key%3D9djdj82h48djs9d2%26oauth_nonce%3D7d8f3e4a%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D137131201%26oauth_token%3Dkkk9d7dh3k39sjv7";
-        let s = Session {
+        let s = Session::<bool> {
             oauth_consumer_key: "9djdj82h48djs9d2",
             oauth_consumer_secret: "j49sk3j29djd",
             oauth_token: "kkk9d7dh3k39sjv7",
@@ -182,6 +193,7 @@ mod tests {
             oauth_nonce: String::from_str("7d8f3e4a"),
             realm : Some("Example"),
             oauth_version : false,
+            callback: test_callback,
         };
         let input = vec![("c2", ""), ("a3", "2+q")];
         let base_string = s.get_base_string(HTTPMethod::POST, "http://example.com/request?b5=%3D%253D&a3=a&c%40=&a2=r%20b", input);
@@ -203,7 +215,7 @@ mod tests {
     #[test]
     /// Verifies that the OAuth header contains all needed values
     fn oauth_header_test() {
-        let s = Session {
+        let s = Session::<bool> {
             oauth_consumer_key: "9djdj82h48djs9d2",
             oauth_consumer_secret: "j49sk3j29djd",
             oauth_token: "kkk9d7dh3k39sjv7",
@@ -214,6 +226,7 @@ mod tests {
             oauth_nonce: String::from_str("7d8f3e4a"),
             realm : Some("Example"),
             oauth_version : false,
+            callback: test_callback,
         };
         let header = s.get_header();
 
@@ -235,7 +248,7 @@ mod tests {
         let expected_oauth_signature = "BJPEhpBgsJ4WlBDp7v%2BvKp9pTB8%3D";
 
         let input = vec![("screen_name", "twitterapi"), ("count", "2")];
-        let mut s = Session {
+        let mut s = Session::<bool> {
             oauth_consumer_key: "k0azC44q2c0DgF7ua9YZ6Q",
             oauth_consumer_secret: "omqK3feYaKOBgZajh7pqe5AU7oDkmTjLtf1p08ro1M",
             oauth_token: "119544186-6YZKqkECA9Z0bxq9bA1vzzG7tfPotCml4oTySkzj",
@@ -246,6 +259,7 @@ mod tests {
             oauth_nonce: String::from_str("bfa380dd4f1aadc18145c1385130305b"),
             realm : None,
             oauth_version : true,
+            callback: test_callback,
         };
         let base_string = s.get_base_string(HTTPMethod::GET, "https://api.twitter.com/1.1/statuses/user_timeline.json", input);
         assert_eq!(base_string, expected_base_string);

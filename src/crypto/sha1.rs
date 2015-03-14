@@ -210,7 +210,7 @@ mod tests {
 
     /// Negative test
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn sha1_fail1(){
         let test = "X".as_bytes();
         assert_eq!(sha1(test), [0xf1u8, 0xc5u8, 0xa3u8, 0xe3u8, 0x15u8,
